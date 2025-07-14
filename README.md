@@ -6,3 +6,5 @@
 - scripts-root/ (monorepo automation)
 - test/ (monorepo-level tests)
 
+DeployHolacracy#HolacracyFactory - 0x426D8839E04D227F8e79439e0c135Fa6B69837Bb
+DeployHolacracy#Organization - 0x4720297E0CEc96bf7366a29c04E644CD2Fd30e09

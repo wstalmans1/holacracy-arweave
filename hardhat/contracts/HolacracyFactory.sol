@@ -30,8 +30,8 @@ contract HolacracyFactory is Initializable, OwnableUpgradeable {
     event OrganizationDeployed(uint256 indexed initiativeId, address org, address[] founders);
 
     /// @notice Initializes the factory contract
-    function initialize(address _organizationImplementation) public initializer {
-        __Ownable_init();
+    function initialize(address _organizationImplementation, address _owner) public initializer {
+        __Ownable_init(_owner);
         organizationImplementation = _organizationImplementation;
     }
 

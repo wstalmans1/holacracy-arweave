@@ -13,12 +13,18 @@ module.exports = buildModule("DeployHolacracy", (m) => {
   // Deploy the Organization implementation contract
   const organizationImpl = m.contract("Organization");
 
+  // Get the deployer address
+  const deployer = m.getAccount(0);
+
   // Deploy the HolacracyFactory as an upgradeable proxy
-  // Pass the Organization implementation address to the initializer
-  const factoryProxy = m.contract("HolacracyFactory", [organizationImpl], {
+  // Pass the Organization implementation address and deployer address to the initializer via proxy config
+  const factoryProxy = m.contract("HolacracyFactory", [], {
     proxy: {
       kind: "transparent",
-      initialize: "initialize",
+      initialize: {
+        method: "initialize",
+        args: [organizationImpl, deployer],
+      },
     },
   });
 
