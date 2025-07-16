@@ -4,10 +4,8 @@ import factoryAbi from "./abis/HolacracyFactory.json";
 import orgAbi from "./abis/Organization.json";
 import TransactionPendingOverlay from './TransactionPendingOverlay';
 import LaunchOrganizationModal from './LaunchOrganizationModal';
-import { HOLACRACY_FACTORY_PROXY, HOLACRACY_FACTORY_IMPLEMENTATION, ORGANIZATION_IMPLEMENTATION } from "./contractAddresses";
 import addresses from './contractAddresses.json';
 
-const FACTORY_ADDRESS = HOLACRACY_FACTORY_PROXY;
 const SEPOLIA_CHAIN_ID = "11155111"; // Sepolia chain ID as string
 
 const styles = {
@@ -131,7 +129,7 @@ function App() {
     // Use a robust Sepolia RPC endpoint (Infura/Alchemy). Set REACT_APP_SEPOLIA_RPC_URL in your .env file.
     const rpcUrl = process.env.REACT_APP_SEPOLIA_RPC_URL || "https://sepolia.infura.io/v3/YOUR_INFURA_KEY";
     const readProvider = new ethers.JsonRpcProvider(rpcUrl);
-    const readFac = new ethers.Contract(FACTORY_ADDRESS, factoryAbi, readProvider);
+    const readFac = new ethers.Contract(addresses.HOLACRACY_FACTORY_PROXY, factoryAbi, readProvider);
     setReadFactory(readFac);
   }, []);
 
@@ -173,7 +171,7 @@ function App() {
         const sign = await prov.getSigner();
         setProvider(prov);
         setSigner(sign);
-        const fac = new ethers.Contract(FACTORY_ADDRESS, factoryAbi, sign);
+        const fac = new ethers.Contract(addresses.HOLACRACY_FACTORY_PROXY, factoryAbi, sign);
         setFactory(fac);
       } else {
         setError("MetaMask not detected. Please install MetaMask.");
