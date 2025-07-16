@@ -1,6 +1,7 @@
 require("dotenv").config();
 require("@nomicfoundation/hardhat-toolbox");
 require("@nomicfoundation/hardhat-ignition");
+require("@openzeppelin/hardhat-upgrades");
 
 /** @type import('hardhat/config').HardhatUserConfig */
 const SEPOLIA_RPC_URL = process.env.SEPOLIA_RPC_URL || "";

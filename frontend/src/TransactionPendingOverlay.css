@@ -1,0 +1,54 @@
+.tx-overlay-backdrop {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(20, 20, 30, 0.85);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tx-overlay-card {
+  background: #23233a;
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  padding: 2.5rem 2.5rem 2rem 2.5rem;
+  min-width: 320px;
+  max-width: 90vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.tx-spinner {
+  width: 56px;
+  height: 56px;
+  border: 6px solid #4f4fff;
+  border-top: 6px solid #fff;
+  border-radius: 50%;
+  animation: tx-spin 1s linear infinite;
+  margin-bottom: 1.5rem;
+}
+
+@keyframes tx-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.tx-overlay-heading {
+  color: #4f4fff;
+  font-weight: 700;
+  font-size: 1.5rem;
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.01em;
+}
+
+.tx-overlay-message {
+  color: #e0e0f0;
+  font-size: 1.1rem;
+  text-align: center;
+  margin: 0;
+  line-height: 1.5;
+} 
