@@ -329,8 +329,8 @@ function App() {
                 left: '50%',
                 transform: 'translateX(-50%)',
                 bottom: '120%',
-                background: '#232946',
-                color: '#fff',
+                background: '#f3f3f3', // light grey for visibility
+                color: '#232946',
                 padding: '8px 16px',
                 borderRadius: 8,
                 boxShadow: '0 2px 12px rgba(44,62,80,0.13)',
