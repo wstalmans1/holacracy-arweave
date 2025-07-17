@@ -123,6 +123,38 @@ function App() {
   const [expanded, setExpanded] = useState({}); // { [initiativeId]: true/false }
   const [launchModal, setLaunchModal] = useState({ open: false, initiative: null, partners: [] });
   const [aboutExpanded, setAboutExpanded] = useState(false);
+  const [holacracyInfoVisible, setHolacracyInfoVisible] = useState(false);
+  const holacracyInfoHideTimer = React.useRef();
+  const [dappInfoVisible, setDappInfoVisible] = useState(false);
+  const dappInfoHideTimer = React.useRef();
+
+  const showHolacracyInfo = () => {
+    if (holacracyInfoHideTimer.current) {
+      clearTimeout(holacracyInfoHideTimer.current);
+      holacracyInfoHideTimer.current = null;
+    }
+    setHolacracyInfoVisible(true);
+  };
+
+  const hideHolacracyInfo = () => {
+    holacracyInfoHideTimer.current = setTimeout(() => {
+      setHolacracyInfoVisible(false);
+    }, 180); // 180ms grace period
+  };
+
+  const showDappInfo = () => {
+    if (dappInfoHideTimer.current) {
+      clearTimeout(dappInfoHideTimer.current);
+      dappInfoHideTimer.current = null;
+    }
+    setDappInfoVisible(true);
+  };
+
+  const hideDappInfo = () => {
+    dappInfoHideTimer.current = setTimeout(() => {
+      setDappInfoVisible(false);
+    }, 180);
+  };
 
   // Set up a read-only provider and contract for reading initiatives
   useEffect(() => {
@@ -225,6 +257,8 @@ function App() {
       await tx.wait();
       setSuccess("Initiative created!");
       setForm({ name: "", purpose: "" });
+      setReloadKey(k => k + 1); // trigger reload
+      setTimeout(() => setSuccess("") , 10000); // Clear after 10 seconds
     } catch (e) {
       setError("Failed to create initiative: " + (e?.info?.error?.message || e.message));
     }
@@ -233,14 +267,19 @@ function App() {
 
   const joinInitiative = async id => {
     setCardStatus(prev => ({ ...prev, [id]: { pending: true, error: "", success: "" } }));
+    setTxPending(true);
     try {
-      const tx = await factory.joinInitiative(id);
+      const tx = await factory.signConstitution(id);
       await tx.wait();
       setCardStatus(prev => ({ ...prev, [id]: { pending: false, error: "", success: "Joined initiative!" } }));
       setReloadKey(k => k + 1); // trigger reload
+      setTimeout(() => {
+        setCardStatus(prev => ({ ...prev, [id]: { ...prev[id], success: "" } }));
+      }, 10000); // Clear after 10 seconds
     } catch (e) {
       setCardStatus(prev => ({ ...prev, [id]: { pending: false, error: "Failed to join initiative: " + (e?.info?.error?.message || e.message), success: "" } }));
     }
+    setTxPending(false);
   };
 
   const launchOrganization = async (id, partners) => {
@@ -284,7 +323,11 @@ function App() {
         }
         setOrgs(arr);
       } catch (e) {
-        setError("Failed to load organizations: " + e.message);
+        if (e.message && e.message.toLowerCase().includes('failed to fetch')) {
+          setError("Failed to load organizations: check your connection");
+        } else {
+          setError("Failed to load organizations: " + e.message);
+        }
       }
       setLoading(false);
     };
@@ -359,12 +402,91 @@ function App() {
         marginBottom: 24,
       }}>
         <div style={{ color: '#232946', fontWeight: 700, fontSize: 20, marginBottom: 10, textAlign: 'left' }}>
-          What is a Holacracy Organization?
+          About this DApp
         </div>
-        <div style={{ color: '#232946', fontSize: 17, textAlign: 'justify', lineHeight: 1.6 }}>
-          A Holacracy organization is a self-organizing structure where authority and decision-making are distributed through clear roles, not traditional management hierarchies. All partners operate under the <a href="https://www.holacracy.org/constitution/5-0/" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>Holacracy Constitution</a>, which defines the rules and processes for governance and collaboration.
+        <div style={{ color: '#888', fontSize: 16, textAlign: 'justify', lineHeight: 1.6 }}>
+          This <span style={{ position: 'relative', display: 'inline-block' }}>
+            <span
+              style={{ cursor: 'pointer', color: '#4ecdc4', fontWeight: 700, position: 'relative' }}
+              onMouseEnter={showDappInfo}
+              onMouseLeave={hideDappInfo}
+              tabIndex={0}
+              aria-label="Info about DApp"
+            >
+              DApp
+            </span>
+            {dappInfoVisible && (
+              <span
+                onMouseEnter={showDappInfo}
+                onMouseLeave={hideDappInfo}
+                style={{
+                  display: 'block',
+                  position: 'absolute',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  top: '100%',
+                  marginTop: 2,
+                  background: '#fffbe6',
+                  color: '#232946',
+                  borderRadius: 10,
+                  boxShadow: '0 4px 24px rgba(44,62,80,0.13)',
+                  padding: '18px 22px',
+                  fontSize: 15,
+                  lineHeight: 1.6,
+                  zIndex: 100,
+                  minWidth: 320,
+                  maxWidth: 400,
+                  textAlign: 'left',
+                  fontWeight: 400,
+                  pointerEvents: 'none',
+                }}
+              >
+                Decentralised Application
+              </span>
+            )}
+          </span> allows anyone to create on-chain
+          <span style={{ position: 'relative', display: 'inline-block', marginLeft: 4, marginRight: 4 }}>
+            <span
+              style={{ cursor: 'pointer', color: '#4ecdc4', fontWeight: 700 }}
+              onMouseEnter={showHolacracyInfo}
+              onMouseLeave={hideHolacracyInfo}
+              tabIndex={0}
+              aria-label="Info about Holacracy organizations"
+            >
+              Holacracy organizations
+            </span>
+            {holacracyInfoVisible && (
+              <span
+                onMouseEnter={showHolacracyInfo}
+                onMouseLeave={hideHolacracyInfo}
+                style={{
+                  display: 'block',
+                  position: 'absolute',
+                  top: '100%',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  marginTop: 2,
+                  background: '#fffbe6',
+                  color: '#232946',
+                  borderRadius: 10,
+                  boxShadow: '0 4px 24px rgba(44,62,80,0.13)',
+                  padding: '18px 22px',
+                  fontSize: 15,
+                  lineHeight: 1.6,
+                  zIndex: 100,
+                  minWidth: 320,
+                  maxWidth: 400,
+                  textAlign: 'left',
+                  fontWeight: 400,
+                }}
+              >
+                A Holacracy organization is a self-organizing structure where authority and decision-making are distributed through clear roles, not traditional management hierarchies. All partners operate under the <a href="https://www.holacracy.org/constitution/5-0/" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline', fontWeight: 400 }}>Holacracy Constitution</a>, which defines the rules and processes for governance and collaboration.
+              </span>
+            )}
+          </span>
+          in two clear phases:
         </div>
-        <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', width: '100%', marginTop: 32 }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', width: '100%', marginTop: 24 }}>
           <button
             onClick={() => setAboutExpanded(e => !e)}
             style={{
@@ -384,13 +506,16 @@ function App() {
             }}
             aria-expanded={aboutExpanded}
           >
-            <span style={{ textAlign: 'left', display: 'block' }}>{aboutExpanded ? '▼' : '▶'} About this DApp & Contract Addresses</span>
+            <span style={{ textAlign: 'left', display: 'block' }}>{aboutExpanded ? '▼' : '▶'} More</span>
           </button>
         </div>
         {aboutExpanded && (
           <div style={{
             marginTop: 16,
+            color: '#888',
+            fontSize: 15,
             textAlign: 'justify',
+            lineHeight: 1.6,
             background: '#f7fafd',
             border: '1px solid #e3eaf2',
             borderRadius: 10,
@@ -399,55 +524,16 @@ function App() {
             maxWidth: 700,
             marginLeft: 'auto',
             marginRight: 'auto',
-            color: '#888',
-            fontSize: 16,
           }}>
-            <span>
-              This{' '}
-              <span style={{ position: 'relative', display: 'inline-block' }}>
-                <span
-                  style={{
-                    cursor: 'pointer',
-                    color: '#888',
-                    fontWeight: 700,
-                    position: 'relative',
-                  }}
-                  onMouseEnter={e => {
-                    const tooltip = document.getElementById('dapp-tooltip-about');
-                    if (tooltip) tooltip.style.display = 'block';
-                  }}
-                  onMouseLeave={e => {
-                    const tooltip = document.getElementById('dapp-tooltip-about');
-                    if (tooltip) tooltip.style.display = 'none';
-                  }}
-                >
-                  DApp
-                  <span
-                    id="dapp-tooltip-about"
-                    style={{
-                      display: 'none',
-                      position: 'absolute',
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      bottom: '120%',
-                      background: '#232946',
-                      color: '#fff',
-                      padding: '8px 16px',
-                      borderRadius: 8,
-                      boxShadow: '0 2px 12px rgba(44,62,80,0.13)',
-                      fontSize: 15,
-                      whiteSpace: 'nowrap',
-                      zIndex: 100,
-                      fontWeight: 400,
-                      pointerEvents: 'none',
-                    }}
-                  >
-                    Decentralised Application
-                  </span>
-                </span>
-              </span>
-              {' '}allows anyone to create, join, and launch on-chain Holacracy organizations. It uses upgradeable smart contracts for security and future-proofing. The HolacracyFactory contract manages pre-launch organization drafts (initiatives), partner signings, and launches new organizations as Beacon Proxy contracts, all pointing to a shared Organization implementation via an upgradeable beacon. All contract logic is open and upgradeable, and the addresses are shown below for full transparency.
-            </span>
+            <b>1. Pre-Launch Phase:</b><br/>
+            Start by drafting your organization. Define its name and purpose, and invite co-founding partners to join. Each partner must review and sign the Holacracy Constitution, ensuring everyone understands the principles and rules that will govern the organization. The only purpose of joining as a co-founder in this phase is to be eligible for assignment to one of the initial roles in the next phase.<br/>
+            <br/>
+            <i>Technical note: In this phase, the <b>Holacracy Factory (Proxy)</b> contract (see below) manages the list of initiatives and tracks which partners have signed the constitution for each draft organization.</i>
+            <br/><br/>
+            <b>2. Launch Phase:</b><br/>
+            Once all co-founders have joined and signed, you define the initial roles for your organization and assign them to the co-founders. After roles are defined and assigned, you can launch the organization on-chain.<br/>
+            <br/>
+            <i>Technical note: When you launch, the <b>Holacracy Factory (Proxy)</b> deploys a new <b>Organization</b> contract for your group, using the <b>Organization Implementation</b> and <b>Organization Beacon</b> contracts (see Contract Addresses below). This means all organizations can be upgraded together in the future, and your organization benefits from both transparency and upgradeability. The Factory keeps a record of all deployed organizations and their founders.</i>
             <br /><br />
             <b style={{ color: '#888' }}>Contract Addresses:</b>
             <ul style={{ listStyle: 'none', padding: 0, margin: '12px 0 0 0', fontSize: 15 }}>
@@ -482,109 +568,113 @@ function App() {
             <h2 style={{ color: '#232946', marginBottom: 0, marginRight: 8, lineHeight: 1 }}>Pre-Launch Organization Drafts</h2>
             <InfoOverlay />
           </div>
+        </div>
+        {/* Combined Create a Draft and Existing Drafts Section */}
+        <div style={{ marginBottom: 44, background: '#e3eaf2', borderRadius: 10, padding: '26px 30px', boxShadow: '0 2px 8px rgba(44,62,80,0.08)', borderLeft: '6px solid #4ecdc4', position: 'relative' }}>
+          <h3 style={{ color: '#232946', fontSize: 20, margin: '10px 0 18px 0', fontWeight: 700, letterSpacing: 0.2 }}>Create a Draft</h3>
           {!account && (
             <button style={styles.button} onClick={connectWallet} disabled={connecting}>
               {connecting ? 'Connecting...' : 'Connect wallet to create a draft'}
             </button>
           )}
-        </div>
-        {account && (
-          <form onSubmit={createInitiative} 
-            style={{ 
-              marginBottom: 24, 
-              display: 'flex', 
-              flexWrap: 'wrap', 
-              alignItems: 'flex-end', 
-              columnGap: 28, // more horizontal space between fields
-              rowGap: 16,    // more vertical space on mobile
-            }}>
-            <div style={{ flex: 1, minWidth: 220, marginRight: 8 }}>
-              <label style={styles.label}>Organization Name</label>
-              <input style={styles.input} name="name" value={form.name} onChange={handleInput} required disabled={txPending || !account} placeholder="e.g., Regen DAO" />
-            </div>
-            <div style={{ flex: 2, minWidth: 260 }}>
-              <label style={styles.label}>Organization Purpose</label>
-              <input style={styles.input} name="purpose" value={form.purpose} onChange={handleInput} required disabled={txPending || !account} placeholder="e.g., To catalyze regenerative collaboration" />
-            </div>
-            <div style={{ flex: '0 0 100%', display: 'flex', justifyContent: 'flex-end', minWidth: 220 }}>
-              <button style={{ ...styles.button, alignSelf: 'center', marginTop: 0, whiteSpace: 'nowrap', minWidth: 220 }} type="submit" disabled={txPending || !account}>Create Organization Draft</button>
-            </div>
-          </form>
-        )}
-        {error && <div style={{ color: '#e63946', marginTop: 12 }}>{error}</div>}
-        {success && <div style={{ color: '#4ecdc4', marginTop: 12 }}>{success}</div>}
-        {txPending && <div style={{ color: '#888', marginTop: 12 }}>Transaction pending...</div>}
-        {/* Drafts list below the form */}
-        {loading ? <div>Loading...</div> : initiatives.filter(ini => !ini.launched).length === 0 ? <div style={{ color: '#888' }}>No drafts yet.</div> : (
-          initiatives.filter(ini => !ini.launched).map(ini => {
-            const isExpanded = expanded[ini.id];
-            const isPartner = ini.partners
-              .filter(addr => addr.toLowerCase() !== ini.creator.toLowerCase())
-              .map(addr => addr.toLowerCase())
-              .includes(account?.toLowerCase());
-            return (
-              <div key={ini.id} style={styles.initiativeCard}>
-                <div
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: isExpanded ? 4 : 0, cursor: 'pointer', padding: '2px 0' }}
-                  onClick={() => setExpanded(prev => ({ ...prev, [ini.id]: !isExpanded }))}
-                >
-                  <div>
-                    <span style={{ fontWeight: 600, fontSize: 16 }}>{ini.name}</span>
-                    <span style={{ color: '#555', fontSize: 14, marginLeft: 10 }}>{ini.purpose}</span>
-                  </div>
-                  <Chevron down={isExpanded} />
-                </div>
-                {isExpanded && (
-                  <>
-                    <div style={{ fontSize: 13, color: '#888', marginBottom: 2, marginTop: 6 }}>
-                      Status: {ini.launched ? <span style={{ color: '#4ecdc4' }}>Launched</span> : <span style={{ color: '#f77f00' }}>Draft (Pre-Launch)</span>}
-                    </div>
-                    <div style={{ fontSize: 13, color: '#888', marginBottom: 2 }}>
-                      Co-Founders ({ini.partners.filter(addr => addr.toLowerCase() !== ini.creator.toLowerCase()).length}):
-                      <ul style={{ margin: '4px 0 0 0', padding: 0, listStyle: 'none', maxHeight: 60, overflowY: 'auto' }}>
-                        {ini.partners.filter(addr => addr.toLowerCase() !== ini.creator.toLowerCase()).map(addr => (
-                          <li key={addr} style={{ fontFamily: 'monospace', fontSize: 12, color: '#232946', background: '#e3eaf2', borderRadius: 4, padding: '2px 6px', marginBottom: 2, display: 'inline-block', marginRight: 4 }}>{addr}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div style={{ fontSize: 13, color: '#888', marginBottom: 2 }}>Creator: {ini.creator}</div>
-                    {/* Actions and inline status */}
-                    {!ini.launched && (
-                      account ? (
-                        <div style={{ marginTop: 8 }}>
-                          {!isPartner && (
-                            <div style={{ color: '#232946', fontSize: 15, marginBottom: 10, fontWeight: 500 }}>
-                              To join as a co-founding partner for this organization, you declare that you understand that <span style={{ color: '#1a5f7a', fontWeight: 600 }}>In a Holacracy, all authority derives from the Constitution, not from individuals</span>. You confirm your understanding by signing the <a href="https://www.holacracy.org/constitution/5-0/" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>Holacracy Constitution</a>.
-                            </div>
-                          )}
-                          {isPartner ? (
-                            <span style={{ color: '#4ecdc4', fontWeight: 500, fontSize: 14, marginRight: 8 }}>You are a co-founder</span>
-                          ) : (
-                            <button style={styles.button} onClick={e => { e.stopPropagation(); joinInitiative(ini.id); }} disabled={cardStatus[ini.id]?.pending}>Sign the Constitution to Join as Co-Founder</button>
-                          )}
-                          {ini.partners.length > 0 && isPartner && (
-                            <button style={{ ...styles.button, marginLeft: 8 }} onClick={e => { e.stopPropagation(); setLaunchModal({ open: true, initiative: ini, partners: ini.partners }); }} disabled={txPending}>Launch as Holacracy Organization</button>
-                          )}
-                        </div>
-                      ) : (
-                        <div style={{ marginTop: 8 }}>
-                          <div style={{ color: '#232946', fontSize: 15, marginBottom: 10, fontWeight: 500 }}>
-                            Connect your wallet to join this organization as a co-founding partner.
-                          </div>
-                          <button style={styles.button} onClick={e => { e.stopPropagation(); connectWallet(); }}>Connect to Join</button>
-                        </div>
-                      )
-                    )}
-                    {/* Inline status for this initiative */}
-                    {cardStatus[ini.id]?.pending && <div style={{ color: '#888', marginTop: 6 }}>Transaction pending...</div>}
-                    {cardStatus[ini.id]?.error && <div style={{ color: '#e63946', marginTop: 6 }}>{cardStatus[ini.id].error}</div>}
-                    {cardStatus[ini.id]?.success && <div style={{ color: '#4ecdc4', marginTop: 6 }}>{cardStatus[ini.id].success}</div>}
-                  </>
-                )}
+          {account && (
+            <form onSubmit={createInitiative}
+              style={{
+                marginBottom: 24,
+                display: 'flex',
+                flexWrap: 'wrap',
+                alignItems: 'flex-end',
+                columnGap: 28,
+                rowGap: 16,
+              }}>
+              <div style={{ flex: 1, minWidth: 220, marginRight: 8 }}>
+                <label style={styles.label}>Organization Name</label>
+                <input style={styles.input} name="name" value={form.name} onChange={handleInput} required disabled={txPending || !account} placeholder="e.g., Regen DAO" />
               </div>
-            );
-          })
-        )}
+              <div style={{ flex: 2, minWidth: 260 }}>
+                <label style={styles.label}>Organization Purpose</label>
+                <input style={styles.input} name="purpose" value={form.purpose} onChange={handleInput} required disabled={txPending || !account} placeholder="e.g., To catalyze regenerative collaboration" />
+              </div>
+              <div style={{ flex: '0 0 100%', display: 'flex', justifyContent: 'flex-end', minWidth: 220 }}>
+                <button style={{ ...styles.button, alignSelf: 'center', marginTop: 0, whiteSpace: 'nowrap', minWidth: 220 }} type="submit" disabled={txPending || !account}>Create Organization Draft</button>
+              </div>
+            </form>
+          )}
+          {error && <div style={{ color: '#e63946', marginTop: 12 }}>{error}</div>}
+          {success && <div style={{ color: '#4ecdc4', marginTop: 12 }}>{success}</div>}
+          {txPending && <div style={{ color: '#888', marginTop: 12 }}>Transaction pending...</div>}
+          <div style={{ height: 0, borderTop: '2px dashed #b8c1ec', margin: '32px 0 32px 0' }} />
+          <h3 style={{ color: '#232946', fontSize: 20, margin: '10px 0 18px 0', fontWeight: 700, letterSpacing: 0.2 }}>Existing Drafts</h3>
+          {loading ? <div>Loading...</div> : initiatives.filter(ini => !ini.launched).length === 0 ? <div style={{ color: '#888' }}>No drafts yet.</div> : (
+            initiatives.filter(ini => !ini.launched).map(ini => {
+              const isExpanded = expanded[ini.id];
+              const isPartner = ini.partners
+                .map(addr => addr.toLowerCase())
+                .includes(account?.toLowerCase());
+              return (
+                <div key={ini.id} style={styles.initiativeCard}>
+                  <div
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: isExpanded ? 4 : 0, cursor: 'pointer', padding: '2px 0' }}
+                    onClick={() => setExpanded(prev => ({ ...prev, [ini.id]: !isExpanded }))}
+                  >
+                    <div>
+                      <span style={{ fontWeight: 600, fontSize: 16 }}>{ini.name}</span>
+                      <span style={{ color: '#555', fontSize: 14, marginLeft: 10 }}>{ini.purpose}</span>
+                    </div>
+                    <Chevron down={isExpanded} />
+                  </div>
+                  {isExpanded && (
+                    <>
+                      <div style={{ fontSize: 13, color: '#888', marginBottom: 2, marginTop: 6 }}>
+                        Status: {ini.launched ? <span style={{ color: '#4ecdc4' }}>Launched</span> : <span style={{ color: '#f77f00' }}>Draft (Pre-Launch)</span>}
+                      </div>
+                      <div style={{ fontSize: 13, color: '#888', marginBottom: 2 }}>
+                        Co-Founders ({ini.partners.length}):
+                        <ul style={{ margin: '4px 0 0 0', padding: 0, listStyle: 'none', maxHeight: 60, overflowY: 'auto' }}>
+                          {ini.partners.map(addr => (
+                            <li key={addr} style={{ fontFamily: 'monospace', fontSize: 12, color: '#232946', background: '#e3eaf2', borderRadius: 4, padding: '2px 6px', marginBottom: 2, display: 'inline-block', marginRight: 4 }}>{addr}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div style={{ fontSize: 13, color: '#888', marginBottom: 2 }}>Creator: {ini.creator}</div>
+                      {/* Actions and inline status */}
+                      {!ini.launched && (
+                        account ? (
+                          <div style={{ marginTop: 8 }}>
+                            {!isPartner && (
+                              <div style={{ color: '#232946', fontSize: 15, marginBottom: 10, fontWeight: 500 }}>
+                                To join as a co-founding partner for this organization, you declare that you understand that <span style={{ color: '#1a5f7a', fontWeight: 600 }}>In a Holacracy, all authority derives from the Constitution, not from individuals</span>. You confirm your understanding by signing the <a href="https://www.holacracy.org/constitution/5-0/" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>Holacracy Constitution</a>.
+                              </div>
+                            )}
+                            {isPartner ? (
+                              <span style={{ color: '#4ecdc4', fontWeight: 500, fontSize: 14, marginRight: 8 }}>You are a co-founder</span>
+                            ) : (
+                              <button style={styles.button} onClick={e => { e.stopPropagation(); joinInitiative(ini.id); }} disabled={cardStatus[ini.id]?.pending}>Sign the Constitution to Join as Co-Founder</button>
+                            )}
+                            {ini.partners.length > 0 && isPartner && (
+                              <button style={{ ...styles.button, marginLeft: 8 }} onClick={e => { e.stopPropagation(); setLaunchModal({ open: true, initiative: ini, partners: ini.partners }); }} disabled={txPending}>Launch as Holacracy Organization</button>
+                            )}
+                          </div>
+                        ) : (
+                          <div style={{ marginTop: 8 }}>
+                            <div style={{ color: '#232946', fontSize: 15, marginBottom: 10, fontWeight: 500 }}>
+                              Connect your wallet to join this organization as a co-founding partner.
+                            </div>
+                            <button style={styles.button} onClick={e => { e.stopPropagation(); connectWallet(); }}>Connect to Join</button>
+                          </div>
+                        )
+                      )}
+                      {/* Inline status for this initiative */}
+                      {cardStatus[ini.id]?.pending && <div style={{ color: '#888', marginTop: 6 }}>Transaction pending...</div>}
+                      {cardStatus[ini.id]?.error && <div style={{ color: '#e63946', marginTop: 6 }}>{cardStatus[ini.id].error}</div>}
+                      {cardStatus[ini.id]?.success && <div style={{ color: '#4ecdc4', marginTop: 6 }}>{cardStatus[ini.id].success}</div>}
+                    </>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
       </div>
       <LaunchOrganizationModal
         open={launchModal.open}
@@ -646,11 +736,27 @@ function App() {
 
 function InfoOverlay() {
   const [show, setShow] = useState(false);
+  const hideTimer = React.useRef();
+
+  const showInfo = () => {
+    if (hideTimer.current) {
+      clearTimeout(hideTimer.current);
+      hideTimer.current = null;
+    }
+    setShow(true);
+  };
+
+  const hideInfo = () => {
+    hideTimer.current = setTimeout(() => {
+      setShow(false);
+    }, 180);
+  };
+
   return (
     <span style={{ position: 'relative', display: 'inline-block', marginTop: 2 }}>
       <span
-        onMouseEnter={() => setShow(true)}
-        onMouseLeave={() => setShow(false)}
+        onMouseEnter={showInfo}
+        onMouseLeave={hideInfo}
         onClick={() => setShow(s => !s)}
         style={{
           display: 'inline-flex',
@@ -675,23 +781,27 @@ function InfoOverlay() {
         i
       </span>
       {show && (
-        <div style={{
-          position: 'absolute',
-          top: 28,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          background: '#fffbe6', // light yellow for better visibility
-          color: '#232946',
-          borderRadius: 10,
-          boxShadow: '0 4px 24px rgba(44,62,80,0.13)',
-          padding: '18px 22px',
-          fontSize: 15,
-          lineHeight: 1.6,
-          zIndex: 100,
-          minWidth: 320,
-          maxWidth: 400,
-          textAlign: 'left',
-        }}>
+        <div
+          onMouseEnter={showInfo}
+          onMouseLeave={hideInfo}
+          style={{
+            position: 'absolute',
+            top: 28,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: '#fffbe6', // light yellow for better visibility
+            color: '#232946',
+            borderRadius: 10,
+            boxShadow: '0 4px 24px rgba(44,62,80,0.13)',
+            padding: '18px 22px',
+            fontSize: 15,
+            lineHeight: 1.6,
+            zIndex: 100,
+            minWidth: 320,
+            maxWidth: 400,
+            textAlign: 'left',
+          }}
+        >
           A pre-launch draft of a Holacracy Organization includes its name, purpose, co-founding partners (who sign the constitution), and initial roles and assignments. Once all co-founders have joined and signed the constitution, you can launch the organization on-chain.
         </div>
       )}

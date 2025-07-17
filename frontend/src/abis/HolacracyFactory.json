@@ -15,7 +15,7 @@
   {"inputs":[],"name":"getInitiativesCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
   {"inputs":[{"internalType":"uint256","name":"initiativeId","type":"uint256"}],"name":"getPartners","outputs":[{"internalType":"address[]","name":"","type":"address[]"}],"stateMutability":"view","type":"function"},
   {"inputs":[{"internalType":"address","name":"_organizationImplementation","type":"address"},{"internalType":"address","name":"_owner","type":"address"}],"name":"initialize","outputs":[],"stateMutability":"nonpayable","type":"function"},
-  {"inputs":[{"internalType":"uint256","name":"initiativeId","type":"uint256"}],"name":"joinInitiative","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"initiativeId","type":"uint256"}],"name":"signConstitution","outputs":[],"stateMutability":"nonpayable","type":"function"},
   {"inputs":[{"internalType":"uint256","name":"initiativeId","type":"uint256"},{"internalType":"bytes","name":"initData","type":"bytes"}],"name":"launchOrganization","outputs":[{"internalType":"address","name":"org","type":"address"}],"stateMutability":"nonpayable","type":"function"},
   {"inputs":[],"name":"organizationImplementation","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}
 ] 
