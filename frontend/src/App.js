@@ -401,7 +401,7 @@ function App() {
         margin: '32px auto 0 auto',
         marginBottom: 24,
       }}>
-        <div style={{ color: '#232946', fontWeight: 700, fontSize: 20, marginBottom: 10, textAlign: 'left' }}>
+        <div id="about-dapp" style={{ color: '#232946', fontWeight: 700, fontSize: 20, marginBottom: 10, textAlign: 'left' }}>
           About this DApp
         </div>
         <div style={{ color: '#888', fontSize: 16, textAlign: 'justify', lineHeight: 1.6 }}>
@@ -543,6 +543,7 @@ function App() {
                   ORGANIZATION_BEACON: "Organization Beacon",
                   HOLACRACY_FACTORY_PROXY: "Holacracy Factory (Proxy)",
                   HOLACRACY_FACTORY_IMPLEMENTATION: "Holacracy Factory (Implementation)",
+                  HOLACRACY_FACTORY_PROXY_ADMIN: "Holacracy Factory Proxy Admin",
                 };
                 return (
                   <li key={name} style={{ marginBottom: 6 }}>
@@ -566,7 +567,29 @@ function App() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, position: 'relative' }}>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <h2 style={{ color: '#232946', marginBottom: 0, marginRight: 8, lineHeight: 1 }}>Pre-Launch Organization Drafts</h2>
-            <InfoOverlay />
+            <a href="#about-dapp" style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 24,
+              height: 24,
+              borderRadius: '50%',
+              background: '#e3eaf2',
+              color: '#4ecdc4',
+              fontWeight: 700,
+              fontSize: 18,
+              marginLeft: 12,
+              border: '1px solid #cdd0d4',
+              boxShadow: '0 1px 4px rgba(44,62,80,0.04)',
+              textDecoration: 'none',
+              cursor: 'pointer',
+              transition: 'background 0.2s',
+            }}
+            title="About this DApp"
+            aria-label="About this DApp"
+            >
+              i
+            </a>
           </div>
         </div>
         {/* Combined Create a Draft and Existing Drafts Section */}
@@ -604,7 +627,7 @@ function App() {
           {success && <div style={{ color: '#4ecdc4', marginTop: 12 }}>{success}</div>}
           {txPending && <div style={{ color: '#888', marginTop: 12 }}>Transaction pending...</div>}
           <div style={{ height: 0, borderTop: '2px dashed #b8c1ec', margin: '32px 0 32px 0' }} />
-          <h3 style={{ color: '#232946', fontSize: 20, margin: '10px 0 18px 0', fontWeight: 700, letterSpacing: 0.2 }}>Existing Drafts</h3>
+          <h3 style={{ color: '#232946', fontSize: 20, margin: '10px 0 18px 0', fontWeight: 700, letterSpacing: 0.2 }}>Join Existing Drafts</h3>
           {loading ? <div>Loading...</div> : initiatives.filter(ini => !ini.launched).length === 0 ? <div style={{ color: '#888' }}>No drafts yet.</div> : (
             initiatives.filter(ini => !ini.launched).map(ini => {
               const isExpanded = expanded[ini.id];
@@ -660,7 +683,7 @@ function App() {
                             <div style={{ color: '#232946', fontSize: 15, marginBottom: 10, fontWeight: 500 }}>
                               Connect your wallet to join this organization as a co-founding partner.
                             </div>
-                            <button style={styles.button} onClick={e => { e.stopPropagation(); connectWallet(); }}>Connect to Join</button>
+                            <button style={styles.button} onClick={e => { e.stopPropagation(); connectWallet(); }}>Connect wallet to join</button>
                           </div>
                         )
                       )}
@@ -731,81 +754,6 @@ function App() {
         message="Processing blockchain transaction..."
       />
     </div>
-  );
-}
-
-function InfoOverlay() {
-  const [show, setShow] = useState(false);
-  const hideTimer = React.useRef();
-
-  const showInfo = () => {
-    if (hideTimer.current) {
-      clearTimeout(hideTimer.current);
-      hideTimer.current = null;
-    }
-    setShow(true);
-  };
-
-  const hideInfo = () => {
-    hideTimer.current = setTimeout(() => {
-      setShow(false);
-    }, 180);
-  };
-
-  return (
-    <span style={{ position: 'relative', display: 'inline-block', marginTop: 2 }}>
-      <span
-        onMouseEnter={showInfo}
-        onMouseLeave={hideInfo}
-        onClick={() => setShow(s => !s)}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: 22,
-          height: 22,
-          borderRadius: '50%',
-          background: '#e3eaf2',
-          color: '#232946',
-          fontWeight: 700,
-          fontSize: 16,
-          cursor: 'pointer',
-          marginLeft: 2,
-          border: '1px solid #cdd0d4',
-          boxShadow: '0 1px 4px rgba(44,62,80,0.04)',
-          marginTop: 2,
-        }}
-        tabIndex={0}
-        aria-label="Info about pre-launch drafts"
-      >
-        i
-      </span>
-      {show && (
-        <div
-          onMouseEnter={showInfo}
-          onMouseLeave={hideInfo}
-          style={{
-            position: 'absolute',
-            top: 28,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            background: '#fffbe6', // light yellow for better visibility
-            color: '#232946',
-            borderRadius: 10,
-            boxShadow: '0 4px 24px rgba(44,62,80,0.13)',
-            padding: '18px 22px',
-            fontSize: 15,
-            lineHeight: 1.6,
-            zIndex: 100,
-            minWidth: 320,
-            maxWidth: 400,
-            textAlign: 'left',
-          }}
-        >
-          A pre-launch draft of a Holacracy Organization includes its name, purpose, co-founding partners (who sign the constitution), and initial roles and assignments. Once all co-founders have joined and signed the constitution, you can launch the organization on-chain.
-        </div>
-      )}
-    </span>
   );
 }
 
