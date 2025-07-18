@@ -526,14 +526,14 @@ function App() {
             marginRight: 'auto',
           }}>
             <b>1. Pre-Launch Phase:</b><br/>
-            Start by drafting your organization. Define its name and purpose, and invite co-founding partners to join. Each partner must review and sign the Holacracy Constitution, ensuring everyone understands the principles and rules that will govern the organization. The only purpose of joining as a co-founder in this phase is to be eligible for assignment to one of the initial roles in the next phase.<br/>
+            The main goal of this phase is to collect the partners to whom initial roles in the organization will be assigned in the Launch Phase. You start by drafting your organization: define its name and purpose, and invite the initial partners to join. Each partner must review and sign the Holacracy Constitution, ensuring everyone understands the principles and rules that will govern the organization.<br/>
             <br/>
             <i>Technical note: In this phase, the <b>Holacracy Factory (Proxy)</b> contract (see below) manages the list of initiatives and tracks which partners have signed the constitution for each draft organization.</i>
             <br/><br/>
             <b>2. Launch Phase:</b><br/>
-            Once all co-founders have joined and signed, you define the initial roles for your organization and assign them to the co-founders. After roles are defined and assigned, you can launch the organization on-chain.<br/>
+            Once all initial partners have joined and signed, you define the initial roles for your organization and assign these roles to them. After roles are defined and assigned, you can launch the organization on-chain.<br/>
             <br/>
-            <i>Technical note: When you launch, the <b>Holacracy Factory (Proxy)</b> deploys a new <b>Organization</b> contract for your group, using the <b>Organization Implementation</b> and <b>Organization Beacon</b> contracts (see Contract Addresses below). This means all organizations can be upgraded together in the future, and your organization benefits from both transparency and upgradeability. The Factory keeps a record of all deployed organizations and their founders.</i>
+            <i>Technical note: When you launch, the <b>Holacracy Factory (Proxy)</b> deploys a new <b>Organization</b> contract for your group, using the <b>Organization Implementation</b> and <b>Organization Beacon</b> contracts (see Contract Addresses below). This means all organizations can be upgraded together in the future, and your organization benefits from both transparency and upgradeability. The Factory keeps a record of all deployed organizations and their partners.</i>
             <br /><br />
             <b style={{ color: '#888' }}>Contract Addresses:</b>
             <ul style={{ listStyle: 'none', padding: 0, margin: '12px 0 0 0', fontSize: 15 }}>
@@ -595,7 +595,7 @@ function App() {
                 <label style={styles.label}>Organization Purpose</label>
                 <input style={styles.input} name="purpose" value={form.purpose} onChange={handleInput} required disabled={txPending || !account} placeholder="e.g., To catalyze regenerative collaboration" />
               </div>
-              <div style={{ flex: '0 0 100%', display: 'flex', justifyContent: 'flex-end', minWidth: 220 }}>
+              <div style={{ flex: '0 0 100%', display: 'flex', justifyContent: 'flex-start', minWidth: 220 }}>
                 <button style={{ ...styles.button, alignSelf: 'center', marginTop: 0, whiteSpace: 'nowrap', minWidth: 220 }} type="submit" disabled={txPending || !account}>Create Organization Draft</button>
               </div>
             </form>
