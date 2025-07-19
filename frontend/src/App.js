@@ -347,16 +347,14 @@ function App() {
         alignItems: 'stretch',
         paddingRight: 0,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginLeft: 36 }}>
-            <div style={{ fontWeight: 700, fontSize: 32, color: '#fff', letterSpacing: 1, marginBottom: 0, lineHeight: 1.1 }}>
-              Holacracy Organization Creation DApp
-            </div>
-            <div style={{ fontWeight: 400, fontSize: 17, color: '#b8c1ec', marginTop: 10 }}>
-              In a Holacracy, all authority derives from the <a href="https://www.holacracy.org/constitution/5-0/" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>Constitution</a>, not from individuals.
-            </div>
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ fontWeight: 700, fontSize: 32, color: '#fff', letterSpacing: 1, marginBottom: 0, lineHeight: 1.1, textAlign: 'center' }}>
+            Holacracy Organization Creation DApp
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginRight: 32 }}>
+          <div style={{ fontWeight: 400, fontSize: 17, color: '#b8c1ec', marginTop: 10, textAlign: 'center' }}>
+            In a Holacracy, all authority derives from the <a href="https://www.holacracy.org/constitution/5-0/" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>Constitution</a>, not from individuals.
+          </div>
+          <div style={{ marginTop: 18, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12 }}>
             {account ? (
               <span
                 style={{ color: '#4ecdc4', background: '#232946', border: '1px solid #4ecdc4', borderRadius: 8, padding: '6px 14px', fontWeight: 600, fontSize: 15, fontFamily: 'monospace', position: 'relative', cursor: 'pointer' }}
