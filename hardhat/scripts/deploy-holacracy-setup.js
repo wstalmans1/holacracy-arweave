@@ -2,9 +2,11 @@ const { ethers, upgrades, run } = require("hardhat");
 const fs = require("fs");
 const path = require("path");
 
-async function verifyWithLog(address, constructorArguments = []) {
+async function verifyWithLog(address, constructorArguments = [], contract = undefined) {
   try {
-    await run("verify:verify", { address, constructorArguments });
+    const params = { address, constructorArguments };
+    if (contract) params.contract = contract;
+    await run("verify:verify", params);
     console.log(`Verified: ${address}`);
   } catch (err) {
     if (err.message && err.message.toLowerCase().includes("already verified")) {
@@ -45,7 +47,7 @@ async function main() {
 
   // 4. Get implementation and ProxyAdmin addresses
   const factoryImpl = await upgrades.erc1967.getImplementationAddress(proxyAddress);
-  const adminAddress = await upgrades.admin.getInstance().then(admin => admin.getAddress());
+  const adminAddress = await upgrades.erc1967.getAdminAddress(proxyAddress);
   console.log("ProxyAdmin address:", adminAddress);
 
   // 5. Write all addresses to frontend/src/contractAddresses.json
@@ -64,8 +66,10 @@ async function main() {
   // 6. AUTOMATIC VERIFICATION (no manual step needed)
   console.log("Verifying contracts on Etherscan...");
   await verifyWithLog(orgImplAddress); // Organization implementation
-  await verifyWithLog(beaconAddress, [orgImplAddress]); // Beacon (constructor: implementation address)
+  // Specify contract path for LocalUpgradeableBeacon to avoid ambiguity
+  await verifyWithLog(beaconAddress, [orgImplAddress], "contracts/LocalUpgradeableBeacon.sol:LocalUpgradeableBeacon");
   await verifyWithLog(factoryImpl); // HolacracyFactory implementation
+  // ProxyAdmin verification may fail if Solidity version does not match deployment
   await verifyWithLog(adminAddress); // ProxyAdmin
 
   // 7. Copy ABIs to frontend/src/abis

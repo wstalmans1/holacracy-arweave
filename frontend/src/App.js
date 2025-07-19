@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ethers } from "ethers";
-import factoryAbi from "./abis/HolacracyFactory.json";
-import orgAbi from "./abis/Organization.json";
+import factoryArtifact from "./abis/HolacracyFactory.json";
 import TransactionPendingOverlay from './TransactionPendingOverlay';
 import LaunchOrganizationModal from './LaunchOrganizationModal';
 import addresses from './contractAddresses.json';
@@ -105,8 +104,6 @@ const styles = {
 };
 
 function App() {
-  const [provider, setProvider] = useState();
-  const [signer, setSigner] = useState();
   const [account, setAccount] = useState();
   const [factory, setFactory] = useState();
   const [readFactory, setReadFactory] = useState();
@@ -127,6 +124,8 @@ function App() {
   const holacracyInfoHideTimer = React.useRef();
   const [dappInfoVisible, setDappInfoVisible] = useState(false);
   const dappInfoHideTimer = React.useRef();
+  const [walletTooltipVisible, setWalletTooltipVisible] = useState(false);
+  const walletTooltipTimer = React.useRef();
 
   const showHolacracyInfo = () => {
     if (holacracyInfoHideTimer.current) {
@@ -156,12 +155,26 @@ function App() {
     }, 180);
   };
 
+  const showWalletTooltip = () => {
+    if (walletTooltipTimer.current) {
+      clearTimeout(walletTooltipTimer.current);
+      walletTooltipTimer.current = null;
+    }
+    setWalletTooltipVisible(true);
+  };
+
+  const hideWalletTooltip = () => {
+    walletTooltipTimer.current = setTimeout(() => {
+      setWalletTooltipVisible(false);
+    }, 180);
+  };
+
   // Set up a read-only provider and contract for reading initiatives
   useEffect(() => {
     // Use a robust Sepolia RPC endpoint (Infura/Alchemy). Set REACT_APP_SEPOLIA_RPC_URL in your .env file.
     const rpcUrl = process.env.REACT_APP_SEPOLIA_RPC_URL || "https://sepolia.infura.io/v3/YOUR_INFURA_KEY";
     const readProvider = new ethers.JsonRpcProvider(rpcUrl);
-    const readFac = new ethers.Contract(addresses.HOLACRACY_FACTORY_PROXY, factoryAbi, readProvider);
+    const readFac = new ethers.Contract(addresses.HOLACRACY_FACTORY_PROXY, factoryArtifact.abi, readProvider);
     setReadFactory(readFac);
   }, []);
 
@@ -172,7 +185,6 @@ function App() {
       if (accounts.length === 0) {
         // Disconnected
         setAccount(undefined);
-        setSigner(undefined);
         setFactory(undefined);
       } else {
         setAccount(accounts[0]);
@@ -201,9 +213,7 @@ function App() {
           return;
         }
         const sign = await prov.getSigner();
-        setProvider(prov);
-        setSigner(sign);
-        const fac = new ethers.Contract(addresses.HOLACRACY_FACTORY_PROXY, factoryAbi, sign);
+        const fac = new ethers.Contract(addresses.HOLACRACY_FACTORY_PROXY, factoryArtifact.abi, sign);
         setFactory(fac);
       } else {
         setError("MetaMask not detected. Please install MetaMask.");
@@ -282,23 +292,6 @@ function App() {
     setTxPending(false);
   };
 
-  const launchOrganization = async (id, partners) => {
-    setError("");
-    setSuccess("");
-    setTxPending(true);
-    try {
-      // Prepare initData for Organization.initialize(address[])
-      const iface = new ethers.Interface(orgAbi);
-      const initData = iface.encodeFunctionData("initialize", [partners]);
-      const tx = await factory.launchOrganization(id, initData);
-      await tx.wait();
-      setSuccess("Organization launched!");
-    } catch (e) {
-      setError("Failed to launch organization: " + (e?.info?.error?.message || e.message));
-    }
-    setTxPending(false);
-  };
-
   // Load organizations (launched initiatives)
   useEffect(() => {
     const contract = factory || readFactory;
@@ -344,70 +337,82 @@ function App() {
 
   return (
     <div style={styles.container}>
-      <div style={styles.header}>
-        Holacracy Organization Creation{' '}
-        <span style={{ position: 'relative', display: 'inline-block' }}>
-          <span
-            style={{
-              cursor: 'pointer',
-              color: '#fff',
-              fontWeight: 700,
-              position: 'relative',
-            }}
-            onMouseEnter={e => {
-              const tooltip = document.getElementById('dapp-tooltip');
-              if (tooltip) tooltip.style.display = 'block';
-            }}
-            onMouseLeave={e => {
-              const tooltip = document.getElementById('dapp-tooltip');
-              if (tooltip) tooltip.style.display = 'none';
-            }}
-          >
-            DApp
-            <span
-              id="dapp-tooltip"
-              style={{
-                display: 'none',
-                position: 'absolute',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                bottom: '120%',
-                background: '#f3f3f3', // light grey for visibility
-                color: '#232946',
-                padding: '8px 16px',
-                borderRadius: 8,
-                boxShadow: '0 2px 12px rgba(44,62,80,0.13)',
-                fontSize: 15,
-                whiteSpace: 'nowrap',
-                zIndex: 100,
-                fontWeight: 400,
-                pointerEvents: 'none',
-              }}
-            >
-              Decentralised Application
-            </span>
-          </span>
-        </span>
-        <div style={{ fontWeight: 400, fontSize: 17, color: '#b8c1ec', marginTop: 8 }}>
-          In a Holacracy, all authority derives from the <a href="https://www.holacracy.org/constitution/5-0/" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>Constitution</a>, not from individuals.
+      <div style={{
+        ...styles.header,
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'stretch',
+        paddingRight: 0,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginLeft: 36 }}>
+            <div style={{ fontWeight: 700, fontSize: 32, color: '#fff', letterSpacing: 1, marginBottom: 0, lineHeight: 1.1 }}>
+              Holacracy Organization Creation DApp
+            </div>
+            <div style={{ fontWeight: 400, fontSize: 17, color: '#b8c1ec', marginTop: 10 }}>
+              In a Holacracy, all authority derives from the <a href="https://www.holacracy.org/constitution/5-0/" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>Constitution</a>, not from individuals.
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginRight: 32 }}>
+            {account ? (
+              <span
+                style={{ color: '#4ecdc4', background: '#232946', border: '1px solid #4ecdc4', borderRadius: 8, padding: '6px 14px', fontWeight: 600, fontSize: 15, fontFamily: 'monospace', position: 'relative', cursor: 'pointer' }}
+                onMouseEnter={showWalletTooltip}
+                onMouseLeave={hideWalletTooltip}
+                tabIndex={0}
+                aria-label="Wallet address"
+              >
+                Connected wallet: {account.slice(0, 6)}...{account.slice(-4)}
+                {walletTooltipVisible && (
+                  <span
+                    style={{
+                      display: 'block',
+                      position: 'absolute',
+                      top: '110%',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      background: '#fffbe6',
+                      color: '#232946',
+                      borderRadius: 10,
+                      boxShadow: '0 4px 24px rgba(44,62,80,0.13)',
+                      padding: '12px 18px',
+                      fontSize: 15,
+                      lineHeight: 1.5,
+                      zIndex: 200,
+                      minWidth: 220,
+                      maxWidth: 320,
+                      textAlign: 'center',
+                      fontWeight: 400,
+                      pointerEvents: 'none',
+                    }}
+                  >
+                    To disconnect, use MetaMask.
+                  </span>
+                )}
+              </span>
+            ) : (
+              <button
+                style={{ background: '#4ecdc4', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 22px', fontWeight: 600, fontSize: 15, cursor: 'pointer' }}
+                onClick={connectWallet}
+              >
+                Connect Wallet
+              </button>
+            )}
+          </div>
         </div>
       </div>
-      <div style={{
-        background: '#fff',
-        borderRadius: 12,
-        boxShadow: '0 2px 12px rgba(44,62,80,0.07)',
-        padding: 32,
-        maxWidth: 800,
-        margin: '32px auto 0 auto',
-        marginBottom: 24,
-      }}>
+      <div style={styles.section}>
         <div id="about-dapp" style={{ color: '#232946', fontWeight: 700, fontSize: 20, marginBottom: 10, textAlign: 'left' }}>
           About this DApp
         </div>
         <div style={{ color: '#888', fontSize: 16, textAlign: 'justify', lineHeight: 1.6 }}>
-          This <span style={{ position: 'relative', display: 'inline-block' }}>
+          This
+          <span style={{ position: 'relative', display: 'inline-block', marginLeft: 2, marginRight: 2 }}>
             <span
-              style={{ cursor: 'pointer', color: '#4ecdc4', fontWeight: 700, position: 'relative' }}
+              style={{ cursor: 'pointer', color: '#4ecdc4', fontWeight: 700 }}
               onMouseEnter={showDappInfo}
               onMouseLeave={hideDappInfo}
               tabIndex={0}
@@ -422,9 +427,9 @@ function App() {
                 style={{
                   display: 'block',
                   position: 'absolute',
+                  top: '100%',
                   left: '50%',
                   transform: 'translateX(-50%)',
-                  top: '100%',
                   marginTop: 2,
                   background: '#fffbe6',
                   color: '#232946',
@@ -438,13 +443,13 @@ function App() {
                   maxWidth: 400,
                   textAlign: 'left',
                   fontWeight: 400,
-                  pointerEvents: 'none',
                 }}
               >
-                Decentralised Application
+                A DApp (Decentralized Application) is an application that runs on a blockchain or decentralized network, rather than being hosted on a single centralized server. DApps are open, transparent, and censorship-resistant by design.
               </span>
             )}
-          </span> allows anyone to create on-chain
+          </span>
+          allows anyone to create or participate in an on-chain
           <span style={{ position: 'relative', display: 'inline-block', marginLeft: 4, marginRight: 4 }}>
             <span
               style={{ cursor: 'pointer', color: '#4ecdc4', fontWeight: 700 }}
@@ -453,7 +458,7 @@ function App() {
               tabIndex={0}
               aria-label="Info about Holacracy organizations"
             >
-              Holacracy organizations
+              Holacracy Organization
             </span>
             {holacracyInfoVisible && (
               <span
@@ -480,11 +485,10 @@ function App() {
                   fontWeight: 400,
                 }}
               >
-                A Holacracy organization is a self-organizing structure where authority and decision-making are distributed through clear roles, not traditional management hierarchies. All partners operate under the <a href="https://www.holacracy.org/constitution/5-0/" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline', fontWeight: 400 }}>Holacracy Constitution</a>, which defines the rules and processes for governance and collaboration.
+                A Holacracy Organization is a self-organizing structure where authority and decision-making are distributed through clear roles, not traditional management hierarchies. All partners operate under the <a href="https://www.holacracy.org/constitution/5-0/" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline', fontWeight: 400 }}>Holacracy Constitution</a>, which defines the rules and processes for governance and collaboration.
               </span>
             )}
-          </span>
-          in two clear phases:
+          </span>.
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', width: '100%', marginTop: 24 }}>
           <button
@@ -566,30 +570,7 @@ function App() {
       <div style={styles.section}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, position: 'relative' }}>
           <div style={{ display: 'flex', alignItems: 'center' }}>
-            <h2 style={{ color: '#232946', marginBottom: 0, marginRight: 8, lineHeight: 1 }}>Pre-Launch Organization Drafts</h2>
-            <a href="#about-dapp" style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 24,
-              height: 24,
-              borderRadius: '50%',
-              background: '#e3eaf2',
-              color: '#4ecdc4',
-              fontWeight: 700,
-              fontSize: 18,
-              marginLeft: 12,
-              border: '1px solid #cdd0d4',
-              boxShadow: '0 1px 4px rgba(44,62,80,0.04)',
-              textDecoration: 'none',
-              cursor: 'pointer',
-              transition: 'background 0.2s',
-            }}
-            title="About this DApp"
-            aria-label="About this DApp"
-            >
-              i
-            </a>
+            <h2 style={{ color: '#232946', marginBottom: 0, marginRight: 8, lineHeight: 1 }}>Create a Holacracy Organization</h2>
           </div>
         </div>
         {/* Combined Create a Draft and Existing Drafts Section */}
@@ -627,7 +608,7 @@ function App() {
           {success && <div style={{ color: '#4ecdc4', marginTop: 12 }}>{success}</div>}
           {txPending && <div style={{ color: '#888', marginTop: 12 }}>Transaction pending...</div>}
           <div style={{ height: 0, borderTop: '2px dashed #b8c1ec', margin: '32px 0 32px 0' }} />
-          <h3 style={{ color: '#232946', fontSize: 20, margin: '10px 0 18px 0', fontWeight: 700, letterSpacing: 0.2 }}>Join Existing Drafts</h3>
+          <h3 style={{ color: '#232946', fontSize: 20, margin: '10px 0 18px 0', fontWeight: 700, letterSpacing: 0.2 }}>Join a Draft or Launch a Draft as an On-chain Organization</h3>
           {loading ? <div>Loading...</div> : initiatives.filter(ini => !ini.launched).length === 0 ? <div style={{ color: '#888' }}>No drafts yet.</div> : (
             initiatives.filter(ini => !ini.launched).map(ini => {
               const isExpanded = expanded[ini.id];
@@ -649,10 +630,10 @@ function App() {
                   {isExpanded && (
                     <>
                       <div style={{ fontSize: 13, color: '#888', marginBottom: 2, marginTop: 6 }}>
-                        Status: {ini.launched ? <span style={{ color: '#4ecdc4' }}>Launched</span> : <span style={{ color: '#f77f00' }}>Draft (Pre-Launch)</span>}
+                        Status: {ini.launched ? <span style={{ color: '#4ecdc4' }}>Launched</span> : <span style={{ color: '#f77f00' }}>Draft</span>}
                       </div>
                       <div style={{ fontSize: 13, color: '#888', marginBottom: 2 }}>
-                        Co-Founders ({ini.partners.length}):
+                        Partners ({ini.partners.length}):
                         <ul style={{ margin: '4px 0 0 0', padding: 0, listStyle: 'none', maxHeight: 60, overflowY: 'auto' }}>
                           {ini.partners.map(addr => (
                             <li key={addr} style={{ fontFamily: 'monospace', fontSize: 12, color: '#232946', background: '#e3eaf2', borderRadius: 4, padding: '2px 6px', marginBottom: 2, display: 'inline-block', marginRight: 4 }}>{addr}</li>
@@ -665,14 +646,14 @@ function App() {
                         account ? (
                           <div style={{ marginTop: 8 }}>
                             {!isPartner && (
-                              <div style={{ color: '#232946', fontSize: 15, marginBottom: 10, fontWeight: 500 }}>
-                                To join as a co-founding partner for this organization, you declare that you understand that <span style={{ color: '#1a5f7a', fontWeight: 600 }}>In a Holacracy, all authority derives from the Constitution, not from individuals</span>. You confirm your understanding by signing the <a href="https://www.holacracy.org/constitution/5-0/" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>Holacracy Constitution</a>.
+                              <div style={{ color: '#232946', fontSize: 15, marginBottom: 10, fontWeight: 500, lineHeight: 1.5 }}>
+                                To join this organization as a partner, you declare that you understand that <span style={{ color: '#1a5f7a', fontWeight: 600 }}>In a Holacracy, all authority derives from the Constitution, not from individuals</span>. You confirm your understanding by signing the <a href="https://www.holacracy.org/constitution/5-0/" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>Holacracy Constitution</a>.
                               </div>
                             )}
                             {isPartner ? (
-                              <span style={{ color: '#4ecdc4', fontWeight: 500, fontSize: 14, marginRight: 8 }}>You are a co-founder</span>
+                              <span style={{ color: '#4ecdc4', fontWeight: 500, fontSize: 14, marginRight: 8 }}>You are a partner</span>
                             ) : (
-                              <button style={styles.button} onClick={e => { e.stopPropagation(); joinInitiative(ini.id); }} disabled={cardStatus[ini.id]?.pending}>Sign the Constitution to Join as Co-Founder</button>
+                              <button style={styles.button} onClick={e => { e.stopPropagation(); joinInitiative(ini.id); }} disabled={cardStatus[ini.id]?.pending}>Sign the Constitution to Join as a Partner</button>
                             )}
                             {ini.partners.length > 0 && isPartner && (
                               <button style={{ ...styles.button, marginLeft: 8 }} onClick={e => { e.stopPropagation(); setLaunchModal({ open: true, initiative: ini, partners: ini.partners }); }} disabled={txPending}>Launch as Holacracy Organization</button>
@@ -680,17 +661,14 @@ function App() {
                           </div>
                         ) : (
                           <div style={{ marginTop: 8 }}>
-                            <div style={{ color: '#232946', fontSize: 15, marginBottom: 10, fontWeight: 500 }}>
-                              Connect your wallet to join this organization as a co-founding partner.
-                            </div>
-                            <button style={styles.button} onClick={e => { e.stopPropagation(); connectWallet(); }}>Connect wallet to join</button>
+                            <button style={styles.button} onClick={e => { e.stopPropagation(); connectWallet(); }}>Connect wallet to join as a partner</button>
                           </div>
                         )
                       )}
                       {/* Inline status for this initiative */}
                       {cardStatus[ini.id]?.pending && <div style={{ color: '#888', marginTop: 6 }}>Transaction pending...</div>}
                       {cardStatus[ini.id]?.error && <div style={{ color: '#e63946', marginTop: 6 }}>{cardStatus[ini.id].error}</div>}
-                      {cardStatus[ini.id]?.success && <div style={{ color: '#4ecdc4', marginTop: 6 }}>{cardStatus[ini.id].success}</div>}
+                      {/* Success message for joining initiative removed as requested */}
                     </>
                   )}
                 </div>
@@ -710,7 +688,7 @@ function App() {
         }}
       />
       <div style={styles.section}>
-        <h2 style={{ color: '#232946', marginBottom: 18 }}>On-chain Holacracy Organizations</h2>
+        <h2 style={{ color: '#232946', marginBottom: 18 }}>Participate in a Holacracy Organization</h2>
         {orgs.length === 0 ? <div style={{ color: '#888' }}>No organizations deployed yet.</div> : (
           orgs.map((org, idx) => {
             const isExpanded = expanded[`org-${org.id}`];
