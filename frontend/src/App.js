@@ -191,8 +191,8 @@ function App() {
   const dappTopInfoAnchor = React.useRef();
   const [participateInfoExpanded, setParticipateInfoExpanded] = useState(false);
   const [createInfoExpanded, setCreateInfoExpanded] = useState(false);
-  const [createSectionExpanded, setCreateSectionExpanded] = useState(true);
-  const [participateSectionExpanded, setParticipateSectionExpanded] = useState(true);
+  const [createSectionExpanded, setCreateSectionExpanded] = useState(false);
+  const [participateSectionExpanded, setParticipateSectionExpanded] = useState(false);
 
   useEffect(() => {
     async function fetchEnsAndBalanceAndNetwork() {
