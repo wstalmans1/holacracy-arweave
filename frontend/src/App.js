@@ -606,8 +606,8 @@ function App() {
                     <span style={{ color: '#888' }}>{friendlyLabels[name] || name}:</span>{' '}
                     <a
                       href={`https://sepolia.etherscan.io/address/${addr}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+          target="_blank"
+          rel="noopener noreferrer"
                       style={{ fontFamily: 'monospace', color: '#4ecdc4', textDecoration: 'underline', fontSize: 13 }}
                     >
                       {addr}
