@@ -561,15 +561,15 @@ function App() {
       </div>
       {/* About this DApp section removed as requested */}
       <div style={styles.section}>
-        <div style={{ display: 'flex', alignItems: 'center', minHeight: 56, justifyContent: 'flex-start', marginBottom: 18, position: 'relative', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', minHeight: 28, justifyContent: 'flex-start', marginBottom: 8, position: 'relative', gap: 8 }}>
           <button
             onClick={() => setCreateSectionExpanded(e => !e)}
-            style={{ background: 'none', border: 'none', color: '#232946', fontWeight: 700, fontSize: 22, cursor: 'pointer', textAlign: 'left', outline: 'none', display: 'flex', alignItems: 'center', gap: 8, margin: 0, padding: 0, lineHeight: 1, minHeight: 48 }}
+            style={{ background: 'none', border: 'none', color: '#232946', fontWeight: 700, fontSize: 22, cursor: 'pointer', textAlign: 'left', outline: 'none', display: 'flex', alignItems: 'center', gap: 5, margin: 0, padding: 0, lineHeight: 1, minHeight: 22 }}
             aria-expanded={createSectionExpanded}
             title={createSectionExpanded ? 'Collapse section' : 'Expand section'}
           >
             <span style={{ display: 'flex', alignItems: 'center' }}>{createSectionExpanded ? '▼' : '▶'}</span>
-            <span style={{ color: '#232946', fontSize: 22, fontWeight: 700, marginLeft: 4, display: 'flex', alignItems: 'center', height: 48 }}>Create a Holacracy Organization</span>
+            <span style={{ color: '#232946', fontSize: 22, fontWeight: 700, marginLeft: 3, display: 'flex', alignItems: 'center', height: 22 }}>Create a Holacracy Organization</span>
           </button>
           <button
             onClick={() => setCreateInfoExpanded(e => !e)}
@@ -738,15 +738,15 @@ function App() {
         }}
       />
       <div style={styles.section}>
-        <div style={{ display: 'flex', alignItems: 'center', minHeight: 56, justifyContent: 'flex-start', marginBottom: 18, position: 'relative', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', minHeight: 28, justifyContent: 'flex-start', marginBottom: 8, position: 'relative', gap: 8 }}>
           <button
             onClick={() => setParticipateSectionExpanded(e => !e)}
-            style={{ background: 'none', border: 'none', color: '#232946', fontWeight: 700, fontSize: 22, cursor: 'pointer', textAlign: 'left', outline: 'none', display: 'flex', alignItems: 'center', gap: 8, margin: 0, padding: 0, lineHeight: 1, minHeight: 48 }}
+            style={{ background: 'none', border: 'none', color: '#232946', fontWeight: 700, fontSize: 22, cursor: 'pointer', textAlign: 'left', outline: 'none', display: 'flex', alignItems: 'center', gap: 5, margin: 0, padding: 0, lineHeight: 1, minHeight: 22 }}
             aria-expanded={participateSectionExpanded}
             title={participateSectionExpanded ? 'Collapse section' : 'Expand section'}
           >
             <span style={{ display: 'flex', alignItems: 'center' }}>{participateSectionExpanded ? '▼' : '▶'}</span>
-            <span style={{ color: '#232946', fontSize: 22, fontWeight: 700, marginLeft: 4, display: 'flex', alignItems: 'center', height: 48 }}>Participate in a Holacracy Organization</span>
+            <span style={{ color: '#232946', fontSize: 22, fontWeight: 700, marginLeft: 3, display: 'flex', alignItems: 'center', height: 22 }}>Participate in a Holacracy Organization</span>
           </button>
           <button
             onClick={() => setParticipateInfoExpanded(e => !e)}
