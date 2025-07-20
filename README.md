@@ -65,3 +65,25 @@ This project uses a **single deployment script** to deploy all core contracts an
 
 **Tip:**  
 If you redeploy, the addresses in the frontend will be automatically updated to match the new backend contracts.
+
+## 🔄 Upgrading the HolacracyFactory (with ABI & Address Sync)
+
+To upgrade the HolacracyFactory (e.g., after adding a new function):
+
+1. **Edit your contract** (e.g., add a new function to `HolacracyFactory.sol`).
+2. **Compile contracts and sync ABIs:**
+   ```sh
+   npm run compile
+   ```
+3. **Upgrade the factory and sync ABIs/addresses:**
+   ```sh
+   npm run upgrade-factory
+   ```
+   This will:
+   - Upgrade the proxy to the new implementation
+   - Sync the latest ABIs to the frontend
+   - Update `frontend/src/contractAddresses.json` with the new implementation and ProxyAdmin addresses
+
+**After every upgrade, your frontend will always have the latest ABI and addresses.**
+
+---

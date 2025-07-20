@@ -647,7 +647,7 @@ function App() {
                     <input style={styles.input} name="purpose" value={form.purpose} onChange={handleInput} required disabled={txPending || !account} placeholder="e.g., To catalyze regenerative collaboration" />
                   </div>
                   <div style={{ flex: '0 0 100%', display: 'flex', justifyContent: 'flex-start', minWidth: 220 }}>
-                    <button style={{ ...styles.button, alignSelf: 'center', marginTop: 0, whiteSpace: 'nowrap', minWidth: 220 }} type="submit" disabled={txPending || !account}>Create Organization Draft</button>
+                    <button style={{ ...styles.button, alignSelf: 'center', marginTop: 0 }} type="submit" disabled={txPending || !account}>Create Draft</button>
                   </div>
                 </form>
               )}
@@ -655,7 +655,7 @@ function App() {
               {success && <div style={{ color: '#4ecdc4', marginTop: 12 }}>{success}</div>}
               {txPending && <div style={{ color: '#888', marginTop: 12 }}>Transaction pending...</div>}
               <div style={{ height: 0, borderTop: '2px dashed #b8c1ec', margin: '32px 0 32px 0' }} />
-              <h3 style={{ color: '#232946', fontSize: 20, margin: '10px 0 18px 0', fontWeight: 700, letterSpacing: 0.2 }}>Join a Draft or Launch a Draft as an On-chain Organization</h3>
+              <h3 style={{ color: '#232946', fontSize: 20, margin: '10px 0 18px 0', fontWeight: 700, letterSpacing: 0.2 }}>Join/Launch a Draft</h3>
               {loading ? <div>Loading...</div> : initiatives.filter(ini => !ini.launched).length === 0 ? <div style={{ color: '#888' }}>No drafts yet.</div> : (
                 initiatives.filter(ini => !ini.launched).map(ini => {
                   const isExpanded = expanded[ini.id];
@@ -797,6 +797,13 @@ function App() {
           )
         )}
       </div>
+      {/* Test field for setUpgradeTestMessage */}
+      {account && (
+        <div style={{ ...styles.section, marginTop: 32, background: '#fffbe6', border: '1px solid #ffe066' }}>
+          <h3 style={{ color: '#232946', fontSize: 20, margin: '10px 0 18px 0', fontWeight: 700 }}>Test: Set Upgrade Test Message</h3>
+          <SetUpgradeTestMessage factory={factory} />
+        </div>
+      )}
       <div style={styles.footer}>
         This project incorporates and builds upon the Holacracy Constitution and related materials developed by <a href="https://www.holacracy.org/" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>HolacracyOne</a>.<br />
         The Holacracy Constitution is available at <a href="https://www.holacracy.org/constitution/5-0/" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>holacracy.org/constitution/5-0/</a> and is licensed under CC BY-SA 4.0.
@@ -811,3 +818,57 @@ function App() {
 }
 
 export default App;
+
+function SetUpgradeTestMessage({ factory }) {
+  const [input, setInput] = useState("");
+  const [current, setCurrent] = useState("");
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    if (!factory) return;
+    let cancelled = false;
+    async function fetchCurrent() {
+      try {
+        const msg = await factory.upgradeTestMessage();
+        if (!cancelled) setCurrent(msg);
+      } catch (e) {
+        if (!cancelled) setCurrent("");
+      }
+    }
+    fetchCurrent();
+    return () => { cancelled = true; };
+  }, [factory, success]);
+
+  const handleSet = async e => {
+    e.preventDefault();
+    setPending(true);
+    setError("");
+    setSuccess("");
+    try {
+      const tx = await factory.setUpgradeTestMessage(input);
+      await tx.wait();
+      setSuccess("Message updated!");
+      setInput("");
+    } catch (e) {
+      setError(e?.info?.error?.message || e.message);
+    }
+    setPending(false);
+  };
+
+  return (
+    <>
+      <TransactionPendingOverlay open={pending} message="Setting upgrade test message..." />
+      <form onSubmit={handleSet} style={{ maxWidth: 500, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <label style={styles.label}>Current Message:</label>
+        <div style={{ background: '#fff', border: '1px solid #cdd0d4', borderRadius: 6, padding: 10, fontSize: 16, minHeight: 24 }}>{current || <span style={{ color: '#888' }}>(none set)</span>}</div>
+        <label style={styles.label}>Set New Message:</label>
+        <input style={styles.input} value={input} onChange={e => setInput(e.target.value)} placeholder="Enter new message" disabled={pending} />
+        <button style={styles.button} type="submit" disabled={pending || !input}>Set Message</button>
+        {error && <div style={{ color: '#e63946' }}>{error}</div>}
+        {success && <div style={{ color: '#4ecdc4' }}>{success}</div>}
+      </form>
+    </>
+  );
+}

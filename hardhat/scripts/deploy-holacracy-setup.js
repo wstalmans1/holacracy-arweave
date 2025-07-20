@@ -63,7 +63,7 @@ async function main() {
   console.log("Addresses written to frontend/src/contractAddresses.json");
   console.log(addresses);
 
-  // 6. AUTOMATIC VERIFICATION (no manual step needed)
+  // 6. AUTOMATIC VERIFICATION (no manual step needed for implementation and beacon)
   console.log("Verifying contracts on Etherscan...");
   await verifyWithLog(orgImplAddress); // Organization implementation
   // Specify contract path for LocalUpgradeableBeacon to avoid ambiguity
@@ -71,6 +71,9 @@ async function main() {
   await verifyWithLog(factoryImpl); // HolacracyFactory implementation
   // ProxyAdmin verification may fail if Solidity version does not match deployment
   await verifyWithLog(adminAddress); // ProxyAdmin
+  // NOTE: Organization proxies (BeaconProxy instances) cannot be automatically verified via Etherscan API.
+  // To verify a deployed organization proxy, use the Etherscan UI and select 'Beacon Proxy' as the proxy type.
+  // This is a limitation of Etherscan's API as of 2024.
 
   // 7. Copy ABIs to frontend/src/abis
   const abisToCopy = [

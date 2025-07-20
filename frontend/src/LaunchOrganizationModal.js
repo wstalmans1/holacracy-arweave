@@ -1,5 +1,16 @@
 import React, { useState } from 'react';
 import TransactionPendingOverlay from './TransactionPendingOverlay';
+import factoryAbi from './abis/HolacracyFactory.json';
+import orgAbi from './abis/Organization.json';
+import addresses from './contractAddresses.json';
+
+// Helper to get ABI array regardless of import style
+function getAbiArray(abiImport) {
+  if (Array.isArray(abiImport)) return abiImport;
+  if (abiImport && Array.isArray(abiImport.abi)) return abiImport.abi;
+  if (abiImport && Array.isArray(abiImport.default)) return abiImport.default;
+  return abiImport;
+}
 
 function LaunchOrganizationModal({ open, onClose, initiative, partners, onDeployed }) {
   const [step, setStep] = useState(0);
@@ -18,12 +29,10 @@ function LaunchOrganizationModal({ open, onClose, initiative, partners, onDeploy
     setDeployError('');
     try {
       const { ethers } = await import('ethers');
-      const FACTORY_ADDRESS = initiative.factoryAddress;
-      const factoryAbi = await (await fetch('/abis/HolacracyFactory.json')).json();
+      const FACTORY_ADDRESS = addresses.HOLACRACY_FACTORY_PROXY;
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
-      const factory = new ethers.Contract(FACTORY_ADDRESS, factoryAbi, signer);
-      const orgAbi = await (await fetch('/abis/Organization.json')).json();
+      const factory = new ethers.Contract(FACTORY_ADDRESS, getAbiArray(factoryAbi), signer);
       // Prepare roles and assignments
       const roleInputs = roles.map(r => ({
         name: r.name,
@@ -33,9 +42,9 @@ function LaunchOrganizationModal({ open, onClose, initiative, partners, onDeploy
       }));
       const assignmentInputs = assignments.map((a, i) => a ? { roleIndex: i, assignedTo: a } : null).filter(Boolean);
       // Prepare initData for Organization.initialize(address[])
-      const iface = new ethers.Interface(orgAbi);
+      const iface = new ethers.Interface(getAbiArray(orgAbi));
       const initData = iface.encodeFunctionData('initialize', [partners]);
-      const tx = await factory.launchOrganization(initiative.id, initData, roleInputs, assignmentInputs);
+      const tx = await factory.launchOrganization(initiative.id, initData);
       const receipt = await tx.wait();
       let orgAddr = '';
       for (const log of receipt.logs) {
@@ -157,6 +166,10 @@ function LaunchOrganizationModal({ open, onClose, initiative, partners, onDeploy
           )}
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '18px 36px', borderTop: '1px solid #eee', background: '#fff', position: 'sticky', bottom: 0, zIndex: 2, borderBottomLeftRadius: 16, borderBottomRightRadius: 16 }}>
+          {/* Exit button, only show if not deploying and not after deployment */}
+          {!(deploying || (step === 2 && orgAddress && !deploying)) && (
+            <button onClick={onClose} style={{ background: 'none', color: '#ee6c4d', border: '1px solid #ee6c4d', borderRadius: 8, padding: '8px 18px', fontWeight: 600, fontSize: 15, cursor: 'pointer', marginRight: 12 }}>Exit</button>
+          )}
           <button onClick={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0}>Back</button>
           {step < 2 ? (
             <button onClick={() => setStep(s => s + 1)} disabled={step === 0 && (roles.length === 0 || roles.some(r => !r.name || !r.purpose))}>Next</button>

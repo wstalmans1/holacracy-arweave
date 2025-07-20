@@ -96,4 +96,12 @@ contract HolacracyFactory is Initializable, OwnableUpgradeable {
     function version() public pure returns (string memory) {
         return "HolacracyFactory (Beacon) v1";
     }
+
+    // 20 July 2025 - Upgrade test
+
+    string public upgradeTestMessage;
+
+    function setUpgradeTestMessage(string calldata message) external {
+        upgradeTestMessage = message;
+    }
 }
