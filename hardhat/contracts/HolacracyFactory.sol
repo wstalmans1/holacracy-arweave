@@ -9,6 +9,7 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
+import "./Organization.sol";
 
 contract HolacracyFactory is Initializable, OwnableUpgradeable {
     struct Initiative {
@@ -60,7 +61,16 @@ contract HolacracyFactory is Initializable, OwnableUpgradeable {
         require(!init.launched, "Already launched");
         require(isPartner[initiativeId][msg.sender], "You must sign the constitution to launch");
         require(init.partners.length > 0, "No partners signed");
-        org = address(new BeaconProxy(organizationBeacon, initData));
+        
+        // Encode the initialization data with name and purpose
+        bytes memory initDataWithNameAndPurpose = abi.encodeWithSelector(
+            Organization.initialize.selector,
+            init.partners,
+            init.name,
+            init.purpose
+        );
+        
+        org = address(new BeaconProxy(organizationBeacon, initDataWithNameAndPurpose));
         init.launched = true;
         init.orgAddress = org;
         emit OrganizationDeployed(initiativeId, org, init.partners);
@@ -98,7 +108,6 @@ contract HolacracyFactory is Initializable, OwnableUpgradeable {
     }
 
     // 20 July 2025 - Upgrade test
-
     string public upgradeTestMessage;
 
     function setUpgradeTestMessage(string calldata message) external {

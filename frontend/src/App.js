@@ -1,10 +1,19 @@
-import React, { useEffect, useState } from "react";
-import { ethers } from "ethers";
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { ethers } from 'ethers';
 import factoryArtifact from "./abis/HolacracyFactory.json";
+import orgArtifact from "./abis/Organization.json";
 import TransactionPendingOverlay from './TransactionPendingOverlay';
 import LaunchOrganizationModal from './LaunchOrganizationModal';
 import addresses from './contractAddresses.json';
 import ReactDOM from 'react-dom';
+
+// Helper function to extract ABI array from different import formats
+function getAbiArray(artifact) {
+  if (Array.isArray(artifact)) return artifact;
+  if (artifact.abi) return artifact.abi;
+  if (artifact.default) return getAbiArray(artifact.default);
+  throw new Error('Could not extract ABI from artifact');
+}
 
 const SEPOLIA_CHAIN_ID = "11155111"; // Sepolia chain ID as string
 
@@ -50,6 +59,7 @@ const styles = {
     color: '#232946',
     marginBottom: 6,
     display: 'block',
+    fontSize: 15,
   },
   input: {
     width: '100%',
@@ -57,7 +67,8 @@ const styles = {
     borderRadius: 6,
     border: '1px solid #cdd0d4',
     marginBottom: 16,
-    fontSize: 16,
+    fontSize: 15,
+    fontFamily: 'Inter, Arial, sans-serif',
   },
   button: {
     background: '#4ecdc4',
@@ -101,6 +112,27 @@ const styles = {
     color: '#888',
     fontSize: 14,
     margin: '48px 0 12px 0',
+  },
+  orgInfo: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 4,
+  },
+  orgLabel: {
+    fontSize: 13,
+    color: '#232946',
+    fontWeight: 600,
+  },
+  orgValue: {
+    fontSize: 15,
+    color: '#4a5568',
+    fontWeight: 500,
+  },
+  orgCompare: {
+    fontSize: 12,
+    color: '#888',
+    fontStyle: 'italic',
+    marginTop: 2,
   },
 };
 
@@ -193,6 +225,7 @@ function App() {
   const [createInfoExpanded, setCreateInfoExpanded] = useState(false);
   const [createSectionExpanded, setCreateSectionExpanded] = useState(false);
   const [participateSectionExpanded, setParticipateSectionExpanded] = useState(false);
+  const [partnersExpanded, setPartnersExpanded] = useState({});
 
   useEffect(() => {
     async function fetchEnsAndBalanceAndNetwork() {
@@ -266,7 +299,7 @@ function App() {
     // Use a robust Sepolia RPC endpoint (Infura/Alchemy). Set REACT_APP_SEPOLIA_RPC_URL in your .env file.
     const rpcUrl = process.env.REACT_APP_SEPOLIA_RPC_URL || "https://sepolia.infura.io/v3/YOUR_INFURA_KEY";
     const readProvider = new ethers.JsonRpcProvider(rpcUrl);
-    const readFac = new ethers.Contract(addresses.HOLACRACY_FACTORY_PROXY, factoryArtifact.abi, readProvider);
+    const readFac = new ethers.Contract(addresses.HOLACRACY_FACTORY_PROXY, getAbiArray(factoryArtifact), readProvider);
     setReadFactory(readFac);
   }, []);
 
@@ -305,7 +338,7 @@ function App() {
           return;
         }
         const sign = await prov.getSigner();
-        const fac = new ethers.Contract(addresses.HOLACRACY_FACTORY_PROXY, factoryArtifact.abi, sign);
+        const fac = new ethers.Contract(addresses.HOLACRACY_FACTORY_PROXY, getAbiArray(factoryArtifact), sign);
         setFactory(fac);
       } else {
         setError("MetaMask not detected. Please install MetaMask.");
@@ -385,39 +418,67 @@ function App() {
   };
 
   // Load organizations (launched initiatives)
-  useEffect(() => {
+  const loadOrgs = useCallback(async () => {
     const contract = factory || readFactory;
     if (!contract) return;
-    const loadOrgs = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const count = await contract.getInitiativesCount();
-        const arr = [];
-        for (let i = 0; i < count; i++) {
-          const [name, purpose, creator, partners, launched] = await contract.getInitiative(i);
-          if (launched) {
-            arr.push({
-              id: i,
-              name,
-              purpose,
-              partners,
-              creator,
-            });
+    setLoading(true);
+    setError("");
+    try {
+      const count = await contract.getInitiativesCount();
+      const arr = [];
+      for (let i = 0; i < count; i++) {
+        const [name, purpose, creator, , launched, orgAddress] = await contract.getInitiative(i);
+        if (launched) {
+          // Load on-chain organization details and current partners
+          let onChainDetails = null;
+          let currentPartners = [];
+          if (orgAddress && orgAddress !== ethers.ZeroAddress) {
+            try {
+              const runner = contract.runner;
+              const orgContract = new ethers.Contract(orgAddress, getAbiArray(orgArtifact), runner);
+              const [orgName, orgPurpose, orgPartners] = await Promise.all([
+                orgContract.name(),
+                orgContract.purpose(),
+                orgContract.getPartners()
+              ]);
+              onChainDetails = { name: orgName, purpose: orgPurpose };
+              currentPartners = orgPartners; // use current partners from organization contract
+            } catch (e) {
+              // If we can't load from organization contract, skip this organization
+              console.warn(`Could not load organization data for ${orgAddress}:`, e.message);
+              continue; // Skip this organization entirely
+            }
+          } else {
+            // If no organization address, skip this organization
+            console.warn(`No organization address found for initiative ${i}`);
+            continue; // Skip this organization entirely
           }
-        }
-        setOrgs(arr);
-      } catch (e) {
-        if (e.message && e.message.toLowerCase().includes('failed to fetch')) {
-          setError("Failed to load organizations: check your connection");
-        } else {
-          setError("Failed to load organizations: " + e.message);
+          
+          arr.push({
+            id: i,
+            name,
+            purpose,
+            partners: currentPartners, // ONLY from organization contract
+            creator,
+            address: orgAddress,
+            onChainDetails
+          });
         }
       }
-      setLoading(false);
-    };
+      setOrgs(arr);
+    } catch (e) {
+      if (e.message && e.message.toLowerCase().includes('failed to fetch')) {
+        setError("Failed to load organizations: check your connection");
+      } else {
+        setError("Failed to load organizations: " + e.message);
+      }
+    }
+    setLoading(false);
+  }, [factory, readFactory]);
+
+  useEffect(() => {
     loadOrgs();
-  }, [factory, readFactory, txPending]);
+  }, [factory, readFactory, txPending, loadOrgs]);
 
   // Helper to check if any transaction is pending
   const anyTxPending = txPending || Object.values(cardStatus).some(status => status?.pending);
@@ -426,6 +487,337 @@ function App() {
   const Chevron = ({ down }) => (
     <svg width="18" height="18" style={{ marginLeft: 8, transition: 'transform 0.2s', transform: down ? 'rotate(180deg)' : 'rotate(0deg)' }} viewBox="0 0 20 20" fill="none"><path d="M6 8l4 4 4-4" stroke="#232946" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
   );
+
+  // OrganizationActions component - dropdown menu for all organization interactions
+  function OrganizationActions({ org, onUpdate }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState(null);
+    const [signingPending, setSigningPending] = useState(false);
+    const dropdownRef = useRef(null);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+      function handleClickOutside(event) {
+        if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+          setIsOpen(false);
+        }
+      }
+      
+      if (isOpen) {
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+      }
+    }, [isOpen]);
+
+    const isPartner = account && org.partners.some(addr => addr.toLowerCase() === account.toLowerCase());
+
+    return (
+      <div style={{ position: 'relative' }} ref={dropdownRef}>
+                              {/* Main Actions Button */}
+                      <button
+                        onClick={() => setIsOpen(!isOpen)}
+                        style={{
+                          width: '100%',
+                          padding: '10px 16px',
+                          background: '#4ecdc4',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: 6,
+                          fontSize: 14,
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between'
+                        }}
+                      >
+                        <span>Organization Actions</span>
+                        <span style={{ fontSize: 12, transition: 'transform 0.2s', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                          ▼
+                        </span>
+                      </button>
+                      
+                      {/* Partner Status Alert */}
+                      {!isPartner && (
+                        <div style={{ 
+                          marginTop: 8, 
+                          padding: '12px 16px',
+                          background: '#fee2e2',
+                          border: '1px solid #fecaca',
+                          borderRadius: 6,
+                          color: '#dc2626',
+                          fontSize: 13,
+                          lineHeight: 1.5
+                        }}>
+                          <div style={{ marginBottom: 8, fontWeight: 600, fontSize: 15 }}>
+                            ⚠ You must be a partner to perform organization actions
+                          </div>
+                          <div style={{ color: '#232946', fontSize: 14, marginBottom: 8, lineHeight: 1.5 }}>
+                            To join this organization as a partner, you declare that you understand that <span style={{ color: '#1a5f7a', fontWeight: 600 }}>In a Holacracy, all authority derives from the Constitution, not from individuals</span>. You confirm your understanding by signing the <a href="https://www.holacracy.org/constitution/5-0/" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>Holacracy Constitution</a>.
+                          </div>
+                          <button 
+                            style={{
+                              background: '#4ecdc4',
+                              color: '#fff',
+                              border: 'none',
+                              borderRadius: 4,
+                              padding: '10px 16px',
+                              fontSize: 14,
+                              fontWeight: 600,
+                              cursor: signingPending ? 'not-allowed' : 'pointer',
+                              width: '100%',
+                              opacity: signingPending ? 0.7 : 1
+                            }}
+                            disabled={signingPending}
+                            onClick={async (e) => {
+                              e.preventDefault();
+                              if (signingPending) return;
+                              
+                              setSigningPending(true);
+                              try {
+                                // Get the organization contract with proper signer
+                                const provider = new ethers.BrowserProvider(window.ethereum);
+                                const signer = await provider.getSigner();
+                                const orgContract = new ethers.Contract(org.address, getAbiArray(orgArtifact), signer);
+                                
+                                // Call the signConstitution function
+                                const tx = await orgContract.signConstitution();
+                                await tx.wait();
+                                
+                                // Refresh the organization data
+                                onUpdate();
+                                
+                                // Close the dropdown after successful signing
+                                setIsOpen(false);
+                                setActiveTab(null);
+                              } catch (error) {
+                                console.error('Error signing constitution:', error);
+                                if (error?.reason) {
+                                  alert(`Failed to join: ${error.reason}`);
+                                } else {
+                                  alert('Failed to join as partner. Please try again.');
+                                }
+                              } finally {
+                                setSigningPending(false);
+                              }
+                            }}
+                          >
+                            {signingPending ? 'Signing Constitution...' : 'Sign the Constitution to Join as a Partner'}
+                          </button>
+                        </div>
+                      )}
+
+        {/* Dropdown Menu */}
+        {isOpen && (
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            background: '#fff',
+            border: '1px solid #e3eaf2',
+            borderRadius: 6,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            zIndex: 1000,
+            marginTop: 4
+          }}>
+            {/* Action Tabs */}
+            <div style={{ display: 'flex', borderBottom: '1px solid #e3eaf2' }}>
+                             <button
+                 onClick={() => setActiveTab('details')}
+                 style={{
+                   flex: 1,
+                   padding: '12px 16px',
+                   background: activeTab === 'details' ? '#4ecdc4' : 'transparent',
+                   color: activeTab === 'details' ? '#fff' : '#232946',
+                   border: 'none',
+                   fontSize: 14,
+                   fontWeight: 600,
+                   cursor: 'pointer'
+                 }}
+               >
+                 Edit
+               </button>
+              <button
+                onClick={() => setActiveTab('roles')}
+                style={{
+                  flex: 1,
+                  padding: '12px 16px',
+                  background: activeTab === 'roles' ? '#4ecdc4' : 'transparent',
+                  color: activeTab === 'roles' ? '#fff' : '#232946',
+                  border: 'none',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                Roles
+              </button>
+            </div>
+
+            {/* Tab Content */}
+            <div style={{ padding: 16 }}>
+              {activeTab === 'details' && org.onChainDetails && (
+                <UpdateOrganizationForm 
+                  orgAddress={org.address} 
+                  currentName={org.onChainDetails.name}
+                  currentPurpose={org.onChainDetails.purpose}
+                  onUpdate={onUpdate}
+                />
+              )}
+              {activeTab === 'roles' && (
+                <div style={{ textAlign: 'center', color: '#888', padding: '20px 0' }}>
+                  <div style={{ fontSize: 16, marginBottom: 8 }}>🎭</div>
+                  <div style={{ fontSize: 15, marginBottom: 8 }}>Role management coming soon...</div>
+                  <div style={{ fontSize: 13, marginTop: 8 }}>
+                    Create, assign, and manage organization roles
+                  </div>
+                </div>
+              )}
+              {!activeTab && (
+                <div style={{ textAlign: 'center', color: '#888', padding: '20px 0', fontSize: 15 }}>
+                  Select an action above to get started
+                </div>
+              )}
+            </div>
+                                  </div>
+                      )}
+                      
+                      {/* Transaction Pending Overlay */}
+                      <TransactionPendingOverlay 
+                        open={signingPending} 
+                        message="Signing Constitution..." 
+                      />
+                    </div>
+                  );
+                }
+
+  // UpdateOrganizationForm component defined inside App to access loadOrgs
+  function UpdateOrganizationForm({ orgAddress, currentName, currentPurpose, onUpdate }) {
+    const [newName, setNewName] = useState(currentName);
+    const [newPurpose, setNewPurpose] = useState(currentPurpose);
+    const [pending, setPending] = useState(false);
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
+
+    const handleUpdate = async (e) => {
+      e.preventDefault();
+      setPending(true);
+      setError("");
+      setSuccess("");
+
+      try {
+        // Get the organization contract with proper signer
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        const orgContract = new ethers.Contract(orgAddress, getAbiArray(orgArtifact), signer);
+        
+        // Check if the user is a partner in this organization
+        const userAddress = await signer.getAddress();
+        const isPartner = await orgContract.hasSignedConstitution(userAddress);
+        
+        if (!isPartner) {
+          setError("You must be a partner in this organization to update its details. Please sign the constitution first.");
+          setPending(false);
+          return;
+        }
+        
+        // Validate inputs
+        if (newName.trim() === "") {
+          setError("Organization name cannot be empty");
+          setPending(false);
+          return;
+        }
+        
+        if (newPurpose.trim() === "") {
+          setError("Organization purpose cannot be empty");
+          setPending(false);
+          return;
+        }
+
+        // Check if both name and purpose are being changed
+        const nameChanged = newName !== currentName;
+        const purposeChanged = newPurpose !== currentPurpose;
+        
+        if (nameChanged && purposeChanged) {
+          // Use combined function for both changes
+          console.log("Updating both name and purpose");
+          const combinedTx = await orgContract.updateNameAndPurpose(newName, newPurpose);
+          console.log("Combined update transaction:", combinedTx.hash);
+          await combinedTx.wait();
+          console.log("Combined update confirmed");
+        } else if (nameChanged) {
+          // Update only name
+          console.log("Updating name from", currentName, "to", newName);
+          const nameTx = await orgContract.updateName(newName);
+          console.log("Name update transaction:", nameTx.hash);
+          await nameTx.wait();
+          console.log("Name update confirmed");
+        } else if (purposeChanged) {
+          // Update only purpose
+          console.log("Updating purpose from", currentPurpose, "to", newPurpose);
+          const purposeTx = await orgContract.updatePurpose(newPurpose);
+          console.log("Purpose update transaction:", purposeTx.hash);
+          await purposeTx.wait();
+          console.log("Purpose update confirmed");
+        }
+
+        setSuccess("Organization details updated successfully!");
+        onUpdate(); // Refresh the parent component
+      } catch (e) {
+        console.error("Update organization error:", e);
+        if (e?.info?.error?.message) {
+          setError(e.info.error.message);
+        } else if (e?.reason) {
+          setError(e.reason);
+        } else if (e?.message) {
+          setError(e.message);
+        } else {
+          setError("Unknown error occurred");
+        }
+      }
+      setPending(false);
+    };
+
+    const hasChanges = newName !== currentName || newPurpose !== currentPurpose;
+
+    return (
+      <>
+        <TransactionPendingOverlay open={pending} message="Updating organization details..." />
+        <form onSubmit={handleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
+          <div style={{ width: '100%' }}>
+            <label style={styles.label}>Name:</label>
+            <input 
+              style={{ ...styles.input, width: '100%', boxSizing: 'border-box' }} 
+              value={newName} 
+              onChange={e => setNewName(e.target.value)} 
+              placeholder="Organization name"
+              disabled={pending}
+            />
+          </div>
+          <div style={{ width: '100%' }}>
+            <label style={styles.label}>Purpose:</label>
+            <textarea 
+              style={{ ...styles.input, width: '100%', boxSizing: 'border-box', minHeight: 60, resize: 'vertical' }} 
+              value={newPurpose} 
+              onChange={e => setNewPurpose(e.target.value)} 
+              placeholder="Organization purpose"
+              disabled={pending}
+            />
+          </div>
+          <button 
+            style={{ ...styles.button, opacity: hasChanges ? 1 : 0.6 }} 
+            type="submit" 
+            disabled={pending || !hasChanges}
+          >
+            Update Details
+          </button>
+          {error && <div style={{ color: '#e63946', fontSize: 14 }}>{error}</div>}
+          {success && <div style={{ color: '#4ecdc4', fontSize: 14 }}>{success}</div>}
+        </form>
+      </>
+    );
+  }
 
   return (
     <div style={styles.container}>
@@ -620,8 +1012,8 @@ function App() {
         )}
         {createSectionExpanded && (
           <>
-            {/* Combined Create a Draft and Existing Drafts Section */}
-            <div style={{ marginBottom: 44, background: '#e3eaf2', borderRadius: 10, padding: '26px 30px', boxShadow: '0 2px 8px rgba(44,62,80,0.08)', borderLeft: '6px solid #4ecdc4', position: 'relative' }}>
+            {/* Create a Draft Section */}
+            <div style={{ marginBottom: 24, background: '#f3f7fa', borderRadius: 10, padding: '26px 30px', boxShadow: '0 2px 8px rgba(44,62,80,0.08)', borderLeft: '6px solid #4ecdc4', position: 'relative' }}>
               <h3 style={{ color: '#232946', fontSize: 20, margin: '10px 0 18px 0', fontWeight: 700, letterSpacing: 0.2 }}>Create a Draft</h3>
               {!account && (
                 <button style={styles.button} onClick={connectWallet} disabled={connecting}>
@@ -654,7 +1046,10 @@ function App() {
               {error && <div style={{ color: '#e63946', marginTop: 12 }}>{error}</div>}
               {success && <div style={{ color: '#4ecdc4', marginTop: 12 }}>{success}</div>}
               {txPending && <div style={{ color: '#888', marginTop: 12 }}>Transaction pending...</div>}
-              <div style={{ height: 0, borderTop: '2px dashed #b8c1ec', margin: '32px 0 32px 0' }} />
+            </div>
+            
+            {/* Join/Launch a Draft Section */}
+            <div style={{ marginBottom: 44, background: '#e3eaf2', borderRadius: 10, padding: '26px 30px', boxShadow: '0 2px 8px rgba(44,62,80,0.08)', borderLeft: '6px solid #4ecdc4', position: 'relative' }}>
               <h3 style={{ color: '#232946', fontSize: 20, margin: '10px 0 18px 0', fontWeight: 700, letterSpacing: 0.2 }}>Join/Launch a Draft</h3>
               {loading ? <div>Loading...</div> : initiatives.filter(ini => !ini.launched).length === 0 ? <div style={{ color: '#888' }}>No drafts yet.</div> : (
                 initiatives.filter(ini => !ini.launched).map(ini => {
@@ -772,23 +1167,71 @@ function App() {
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: isExpanded ? 4 : 0, cursor: 'pointer', padding: '2px 0' }}
                     onClick={() => setExpanded(prev => ({ ...prev, [`org-${org.id}`]: !isExpanded }))}
                   >
-                    <div>
-                      <span style={{ fontWeight: 600, fontSize: 16 }}>{org.name}</span>
-                      <span style={{ color: '#555', fontSize: 14, marginLeft: 10 }}>{org.purpose}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 600, fontSize: 16, color: '#232946' }}>
+                        {org.onChainDetails ? org.onChainDetails.name : org.name}
+                      </div>
+                      <div style={{ fontSize: 13, color: '#4a5568', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {org.onChainDetails ? org.onChainDetails.purpose : org.purpose}
+                      </div>
                     </div>
                     <Chevron down={isExpanded} />
                   </div>
                   {isExpanded && (
                     <>
-                      <div style={{ fontSize: 13, color: '#888', marginBottom: 2, marginTop: 6 }}>
-                        <b>Founders ({org.partners.length}):</b>
-                        <ul style={{ margin: '4px 0 0 0', padding: 0, listStyle: 'none', maxHeight: 60, overflowY: 'auto' }}>
-                          {org.partners.map(addr => (
-                            <li key={addr} style={{ fontFamily: 'monospace', fontSize: 12, color: '#232946', background: '#e3eaf2', borderRadius: 4, padding: '2px 6px', marginBottom: 2, display: 'inline-block', marginRight: 4 }}>{addr}</li>
-                          ))}
-                        </ul>
+                      <div style={styles.orgInfo}>
+
+                                                {/* Organization Actions Section */}
+                        <div style={{ marginTop: 16 }}>
+                          <OrganizationActions 
+                            org={org}
+                            onUpdate={loadOrgs}
+                          />
+                        </div>
+                        <div style={{ fontSize: 13, color: '#888', marginTop: 8 }}>
+                          <div 
+                            style={{ 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              justifyContent: 'space-between', 
+                              cursor: 'pointer',
+                              padding: '4px 0'
+                            }}
+                            onClick={() => setPartnersExpanded(prev => ({ ...prev, [org.id]: !prev[org.id] }))}
+                          >
+                            <b>Partners ({org.partners.length}):</b>
+                            <span style={{ fontSize: 12, transition: 'transform 0.2s', transform: partnersExpanded[org.id] ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                              ▼
+                            </span>
+                          </div>
+                          {partnersExpanded[org.id] && (
+                            <ul style={{ textAlign: 'left', margin: '8px 0 0 0', padding: 0, listStyle: 'none', maxHeight: 120, overflowY: 'auto' }}>
+                              {org.partners.map(addr => (
+                                <li key={addr} style={{ 
+                                  fontFamily: 'monospace', 
+                                  fontSize: 12, 
+                                  color: '#232946', 
+                                  background: addr.toLowerCase() === account?.toLowerCase() ? '#4ecdc4' : '#e3eaf2', 
+                                  borderRadius: 4, 
+                                  padding: '2px 6px', 
+                                  marginBottom: 2, 
+                                  display: 'inline-block', 
+                                  marginRight: 4
+                                }}>
+                                  {addr}
+                                  {addr.toLowerCase() === account?.toLowerCase() && (
+                                    <span style={{ marginLeft: 4, fontSize: 10, color: '#fff' }}>← You</span>
+                                  )}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                        <div style={{ fontSize: 13, color: '#888', marginTop: 4 }}>
+                          <div><b>Creator:</b> {org.creator}</div>
+                          <div><b>Contract:</b> <a href={`https://sepolia.etherscan.io/address/${org.address}`} target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>{org.address}</a></div>
+                        </div>
                       </div>
-                      <div style={{ fontSize: 13, color: '#888', marginBottom: 2 }}>Creator: {org.creator}</div>
                     </>
                   )}
                 </div>
@@ -797,13 +1240,7 @@ function App() {
           )
         )}
       </div>
-      {/* Test field for setUpgradeTestMessage */}
-      {account && (
-        <div style={{ ...styles.section, marginTop: 32, background: '#fffbe6', border: '1px solid #ffe066' }}>
-          <h3 style={{ color: '#232946', fontSize: 20, margin: '10px 0 18px 0', fontWeight: 700 }}>Test: Set Upgrade Test Message</h3>
-          <SetUpgradeTestMessage factory={factory} />
-        </div>
-      )}
+      {/* The test section for setUpgradeTestMessage has been removed */}
       <div style={styles.footer}>
         This project incorporates and builds upon the Holacracy Constitution and related materials developed by <a href="https://www.holacracy.org/" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>HolacracyOne</a>.<br />
         The Holacracy Constitution is available at <a href="https://www.holacracy.org/constitution/5-0/" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>holacracy.org/constitution/5-0/</a> and is licensed under CC BY-SA 4.0.
@@ -818,57 +1255,3 @@ function App() {
 }
 
 export default App;
-
-function SetUpgradeTestMessage({ factory }) {
-  const [input, setInput] = useState("");
-  const [current, setCurrent] = useState("");
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-
-  useEffect(() => {
-    if (!factory) return;
-    let cancelled = false;
-    async function fetchCurrent() {
-      try {
-        const msg = await factory.upgradeTestMessage();
-        if (!cancelled) setCurrent(msg);
-      } catch (e) {
-        if (!cancelled) setCurrent("");
-      }
-    }
-    fetchCurrent();
-    return () => { cancelled = true; };
-  }, [factory, success]);
-
-  const handleSet = async e => {
-    e.preventDefault();
-    setPending(true);
-    setError("");
-    setSuccess("");
-    try {
-      const tx = await factory.setUpgradeTestMessage(input);
-      await tx.wait();
-      setSuccess("Message updated!");
-      setInput("");
-    } catch (e) {
-      setError(e?.info?.error?.message || e.message);
-    }
-    setPending(false);
-  };
-
-  return (
-    <>
-      <TransactionPendingOverlay open={pending} message="Setting upgrade test message..." />
-      <form onSubmit={handleSet} style={{ maxWidth: 500, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <label style={styles.label}>Current Message:</label>
-        <div style={{ background: '#fff', border: '1px solid #cdd0d4', borderRadius: 6, padding: 10, fontSize: 16, minHeight: 24 }}>{current || <span style={{ color: '#888' }}>(none set)</span>}</div>
-        <label style={styles.label}>Set New Message:</label>
-        <input style={styles.input} value={input} onChange={e => setInput(e.target.value)} placeholder="Enter new message" disabled={pending} />
-        <button style={styles.button} type="submit" disabled={pending || !input}>Set Message</button>
-        {error && <div style={{ color: '#e63946' }}>{error}</div>}
-        {success && <div style={{ color: '#4ecdc4' }}>{success}</div>}
-      </form>
-    </>
-  );
-}

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import TransactionPendingOverlay from './TransactionPendingOverlay';
 import factoryAbi from './abis/HolacracyFactory.json';
-import orgAbi from './abis/Organization.json';
 import addresses from './contractAddresses.json';
 
 // Helper to get ABI array regardless of import style
@@ -33,18 +32,9 @@ function LaunchOrganizationModal({ open, onClose, initiative, partners, onDeploy
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
       const factory = new ethers.Contract(FACTORY_ADDRESS, getAbiArray(factoryAbi), signer);
-      // Prepare roles and assignments
-      const roleInputs = roles.map(r => ({
-        name: r.name,
-        purpose: r.purpose,
-        domains: r.domains.filter(Boolean),
-        accountabilities: r.accountabilities.filter(Boolean)
-      }));
-      const assignmentInputs = assignments.map((a, i) => a ? { roleIndex: i, assignedTo: a } : null).filter(Boolean);
-      // Prepare initData for Organization.initialize(address[])
-      const iface = new ethers.Interface(getAbiArray(orgAbi));
-      const initData = iface.encodeFunctionData('initialize', [partners]);
-      const tx = await factory.launchOrganization(initiative.id, initData);
+      
+      // Launch the organization - the factory will handle initialization data
+      const tx = await factory.launchOrganization(initiative.id, '0x');
       const receipt = await tx.wait();
       let orgAddr = '';
       for (const log of receipt.logs) {
@@ -78,32 +68,51 @@ function LaunchOrganizationModal({ open, onClose, initiative, partners, onDeploy
                   <input type="text" value={role.name} onChange={e => setRoles(r => r.map((ro, i) => i === idx ? { ...ro, name: e.target.value } : ro))} placeholder="Role name" style={{ width: '100%', padding: 7, border: '1px solid #ccc', borderRadius: 6, fontSize: 15, boxSizing: 'border-box', marginBottom: 6 }} />
                   <input type="text" value={role.purpose} onChange={e => setRoles(r => r.map((ro, i) => i === idx ? { ...ro, purpose: e.target.value } : ro))} placeholder="Purpose" style={{ width: '100%', padding: 7, border: '1px solid #ccc', borderRadius: 6, fontSize: 15, boxSizing: 'border-box', marginBottom: 6 }} />
                   <div style={{ marginBottom: 6 }}>
-                    <label style={{ fontSize: 14, color: '#888' }}>Domains:</label>
+                    <div style={{ fontSize: 14, color: '#555', marginBottom: 4 }}>Domains:</div>
                     {role.domains.map((domain, dIdx) => (
-                      <div key={dIdx} style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
-                        <input type="text" value={domain} onChange={e => setRoles(r => r.map((ro, i) => i === idx ? { ...ro, domains: ro.domains.map((d, j) => j === dIdx ? e.target.value : d) } : ro))} placeholder="Domain" style={{ flex: 1, padding: 6, border: '1px solid #ccc', borderRadius: 6, fontSize: 14 }} />
-                        {role.domains.length > 1 && (
-                          <button onClick={() => setRoles(r => r.map((ro, i) => i === idx ? { ...ro, domains: ro.domains.filter((_, j) => j !== dIdx) } : ro))} style={{ marginLeft: 6, background: 'none', border: 'none', color: '#ee6c4d', fontWeight: 700, fontSize: 16, cursor: 'pointer' }}>×</button>
+                      <div key={dIdx} style={{ marginBottom: 4, display: 'flex', gap: 6 }}>
+                        <input
+                          type="text"
+                          value={domain}
+                          onChange={e => setRoles(r => r.map((ro, i) => i === idx ? {
+                            ...ro,
+                            domains: ro.domains.map((d, di) => di === dIdx ? e.target.value : d)
+                          } : ro))}
+                          placeholder={`Domain ${dIdx + 1}`}
+                          style={{ flex: 1, padding: 7, border: '1px solid #ccc', borderRadius: 6, fontSize: 15 }}
+                        />
+                        {dIdx === role.domains.length - 1 && domain && (
+                          <button
+                            onClick={() => setRoles(r => r.map((ro, i) => i === idx ? { ...ro, domains: [...ro.domains, ''] } : ro))}
+                            style={{ padding: '4px 8px', background: '#4ecdc4', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}
+                          >+</button>
                         )}
                       </div>
                     ))}
-                    <button onClick={() => setRoles(r => r.map((ro, i) => i === idx ? { ...ro, domains: [...ro.domains, ''] } : ro))} style={{ marginTop: 2, background: '#e0e0e0', color: '#232946', border: 'none', borderRadius: 6, padding: '3px 10px', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>+ Domain</button>
                   </div>
                   <div>
-                    <label style={{ fontSize: 14, color: '#888' }}>Accountabilities:</label>
-                    {role.accountabilities.map((acc, aIdx) => (
-                      <div key={aIdx} style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
-                        <input type="text" value={acc} onChange={e => setRoles(r => r.map((ro, i) => i === idx ? { ...ro, accountabilities: ro.accountabilities.map((a, j) => j === aIdx ? e.target.value : a) } : ro))} placeholder="Accountability" style={{ flex: 1, padding: 6, border: '1px solid #ccc', borderRadius: 6, fontSize: 14 }} />
-                        {role.accountabilities.length > 1 && (
-                          <button onClick={() => setRoles(r => r.map((ro, i) => i === idx ? { ...ro, accountabilities: ro.accountabilities.filter((_, j) => j !== aIdx) } : ro))} style={{ marginLeft: 6, background: 'none', border: 'none', color: '#ee6c4d', fontWeight: 700, fontSize: 16, cursor: 'pointer' }}>×</button>
+                    <div style={{ fontSize: 14, color: '#555', marginBottom: 4 }}>Accountabilities:</div>
+                    {role.accountabilities.map((accountability, aIdx) => (
+                      <div key={aIdx} style={{ marginBottom: 4, display: 'flex', gap: 6 }}>
+                        <input
+                          type="text"
+                          value={accountability}
+                          onChange={e => setRoles(r => r.map((ro, i) => i === idx ? {
+                            ...ro,
+                            accountabilities: ro.accountabilities.map((a, ai) => ai === aIdx ? e.target.value : a)
+                          } : ro))}
+                          placeholder={`Accountability ${aIdx + 1}`}
+                          style={{ flex: 1, padding: 7, border: '1px solid #ccc', borderRadius: 6, fontSize: 15 }}
+                        />
+                        {aIdx === role.accountabilities.length - 1 && accountability && (
+                          <button
+                            onClick={() => setRoles(r => r.map((ro, i) => i === idx ? { ...ro, accountabilities: [...ro.accountabilities, ''] } : ro))}
+                            style={{ padding: '4px 8px', background: '#4ecdc4', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}
+                          >+</button>
                         )}
                       </div>
                     ))}
-                    <button onClick={() => setRoles(r => r.map((ro, i) => i === idx ? { ...ro, accountabilities: [...ro.accountabilities, ''] } : ro))} style={{ marginTop: 2, background: '#e0e0e0', color: '#232946', border: 'none', borderRadius: 6, padding: '3px 10px', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>+ Accountability</button>
                   </div>
-                  {roles.length > 1 && (
-                    <button onClick={() => setRoles(r => r.filter((_, i) => i !== idx))} style={{ alignSelf: 'flex-end', background: 'none', border: 'none', color: '#ee6c4d', fontWeight: 700, fontSize: 18, cursor: 'pointer', marginTop: 4 }}>× Remove Role</button>
-                  )}
                 </div>
               ))}
               <button onClick={() => setRoles(r => [...r, { name: '', purpose: '', domains: [''], accountabilities: [''] }])} style={{ background: '#4ecdc4', color: '#fff', border: 'none', borderRadius: 6, padding: '7px 18px', fontWeight: 600, fontSize: 15, cursor: 'pointer', marginBottom: 8 }}>+ Add Role</button>
@@ -133,8 +142,10 @@ function LaunchOrganizationModal({ open, onClose, initiative, partners, onDeploy
               <div style={{ fontWeight: 600, marginBottom: 10 }}>Review & Deploy</div>
               <div style={{ fontSize: 15, color: '#555', marginBottom: 16 }}>
                 <b>Founders:</b>
-                <ul style={{ textAlign: 'left', margin: '8px 0 12px 18px', padding: 0 }}>
-                  {partners.map((f, i) => <li key={i} style={{ fontSize: 14 }}>{f}</li>)}
+                <ul style={{ textAlign: 'left', margin: '8px 0 0 0', padding: 0, listStyle: 'none', maxHeight: 60, overflowY: 'auto' }}>
+                  {partners.map(addr => (
+                    <li key={addr} style={{ fontFamily: 'monospace', fontSize: 12, color: '#232946', background: '#e3eaf2', borderRadius: 4, padding: '2px 6px', marginBottom: 2, display: 'inline-block', marginRight: 4 }}>{addr}</li>
+                  ))}
                 </ul>
                 <b>Organization Purpose:</b>
                 <div style={{ fontSize: 14, margin: '6px 0 12px 0' }}>{initiative.purpose}</div>
