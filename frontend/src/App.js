@@ -550,8 +550,8 @@ function App() {
                           alignItems: 'center'
                         }}
                       >
-                        <span style={{ fontSize: 12, transition: 'transform 0.2s', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', marginRight: 8, color: '#fff' }}>
-                          ▼
+                        <span style={{ fontSize: 12, transition: 'transform 0.2s', transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)', marginRight: 8, color: '#fff' }}>
+                          ▶
                         </span>
                         <span>Organization Actions</span>
                       </button>
@@ -1123,14 +1123,16 @@ function App() {
                   return (
                     <div key={ini.id} style={styles.initiativeCard}>
                       <div
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: isExpanded ? 4 : 0, cursor: 'pointer', padding: '2px 0' }}
+                        style={{ display: 'flex', alignItems: 'center', marginBottom: isExpanded ? 4 : 0, cursor: 'pointer', padding: '2px 0' }}
                         onClick={() => setExpanded(prev => ({ ...prev, [ini.id]: !isExpanded }))}
                       >
-                        <div>
+                        <span style={{ fontSize: 12, transition: 'transform 0.2s', transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)', marginRight: 8, color: '#4ecdc4' }}>
+                          ▶
+                        </span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
                           <span style={{ fontWeight: 600, fontSize: 16 }}>{ini.name}</span>
                           <span style={{ color: '#555', fontSize: 14, marginLeft: 10 }}>{ini.purpose}</span>
                         </div>
-                        <Chevron down={isExpanded} />
                       </div>
                       {isExpanded && (
                         <>
@@ -1230,8 +1232,8 @@ function App() {
                     style={{ display: 'flex', alignItems: 'center', marginBottom: isExpanded ? 4 : 0, cursor: 'pointer', padding: '2px 0' }}
                     onClick={() => setExpanded(prev => ({ ...prev, [`org-${org.id}`]: !isExpanded }))}
                   >
-                    <span style={{ fontSize: 12, transition: 'transform 0.2s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', marginRight: 8, color: '#4ecdc4' }}>
-                      ▼
+                    <span style={{ fontSize: 12, transition: 'transform 0.2s', transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)', marginRight: 8, color: '#4ecdc4' }}>
+                      ▶
                     </span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontWeight: 600, fontSize: 16, color: '#232946' }}>
@@ -1303,8 +1305,8 @@ function App() {
                             }}
                             onClick={() => setPartnersExpanded(prev => ({ ...prev, [org.id]: !prev[org.id] }))}
                           >
-                            <span style={{ fontSize: 12, transition: 'transform 0.2s', transform: partnersExpanded[org.id] ? 'rotate(180deg)' : 'rotate(0deg)', marginRight: 8, color: '#4ecdc4' }}>
-                              ▼
+                            <span style={{ fontSize: 12, transition: 'transform 0.2s', transform: partnersExpanded[org.id] ? 'rotate(90deg)' : 'rotate(0deg)', marginRight: 8, color: '#4ecdc4' }}>
+                              ▶
                             </span>
                             <b>Partners ({org.partners.length}):</b>
                           </div>
