@@ -163,16 +163,27 @@ const holacracyInfoboxOverlayStyle = {
 // Portal component for overlays with mouse enter/leave support
 function OverlayPortal({ anchorRef, visible, children, style, onMouseEnter, onMouseLeave }) {
   const [coords, setCoords] = useState(null);
+
   useEffect(() => {
     if (visible && anchorRef.current) {
       const rect = anchorRef.current.getBoundingClientRect();
-      setCoords({
-        top: rect.bottom + window.scrollY + 2, // 2px marginTop
-        left: rect.left + window.scrollX + rect.width / 2,
-      });
+      // Only use element position, not mouse coordinates, to keep infobox stable
+      const finalCoords = {
+        top: rect.top + window.scrollY,
+        left: rect.left + window.scrollX,
+      };
+      setCoords(finalCoords);
     }
   }, [visible, anchorRef]);
+
+
+
   if (!visible || !coords) return null;
+  
+  // Check if the infobox would go off screen at the top
+  const infoboxHeight = 100; // Approximate height of infobox
+  const shouldShowBelow = coords.top < infoboxHeight;
+  
   return ReactDOM.createPortal(
     <div
       style={{
@@ -180,8 +191,9 @@ function OverlayPortal({ anchorRef, visible, children, style, onMouseEnter, onMo
         position: 'absolute',
         top: coords.top,
         left: coords.left,
-        transform: 'translateX(-50%)',
+        transform: shouldShowBelow ? 'translateY(20px)' : 'translateY(-100%)',
         zIndex: 9999,
+        pointerEvents: 'auto', // Ensure clicks work
       }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -221,11 +233,19 @@ function App() {
   // Add refs for the anchors
   const holacracyTopInfoAnchor = React.useRef();
   const dappTopInfoAnchor = React.useRef();
+  const nameInfoAnchor = React.useRef();
+  const purposeInfoAnchor = React.useRef();
+  const orgNameInfoAnchors = React.useRef({});
+  const orgPurposeInfoAnchors = React.useRef({});
   const [participateInfoExpanded, setParticipateInfoExpanded] = useState(false);
   const [createInfoExpanded, setCreateInfoExpanded] = useState(false);
   const [createSectionExpanded, setCreateSectionExpanded] = useState(false);
   const [participateSectionExpanded, setParticipateSectionExpanded] = useState(false);
   const [partnersExpanded, setPartnersExpanded] = useState({});
+  const [showNameInfo, setShowNameInfo] = useState(false);
+  const [showPurposeInfo, setShowPurposeInfo] = useState(false);
+  const [showOrgNameInfo, setShowOrgNameInfo] = useState({});
+  const [showOrgPurposeInfo, setShowOrgPurposeInfo] = useState({});
 
   useEffect(() => {
     async function fetchEnsAndBalanceAndNetwork() {
@@ -527,14 +547,13 @@ function App() {
                           fontWeight: 600,
                           cursor: 'pointer',
                           display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between'
+                          alignItems: 'center'
                         }}
                       >
-                        <span>Organization Actions</span>
-                        <span style={{ fontSize: 12, transition: 'transform 0.2s', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                        <span style={{ fontSize: 12, transition: 'transform 0.2s', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', marginRight: 8, color: '#fff' }}>
                           ▼
                         </span>
+                        <span>Organization Actions</span>
                       </button>
                       
                       {/* Partner Status Alert */}
@@ -956,19 +975,19 @@ function App() {
         <div style={{ display: 'flex', alignItems: 'center', minHeight: 28, justifyContent: 'flex-start', marginBottom: 8, position: 'relative', gap: 8 }}>
           <button
             onClick={() => setCreateSectionExpanded(e => !e)}
-            style={{ background: 'none', border: 'none', color: '#232946', fontWeight: 700, fontSize: 22, cursor: 'pointer', textAlign: 'left', outline: 'none', display: 'flex', alignItems: 'center', gap: 5, margin: 0, padding: 0, lineHeight: 1, minHeight: 22 }}
+            style={{ background: 'none', border: 'none', color: '#232946', cursor: 'pointer', outline: 'none', display: 'flex', alignItems: 'center', margin: 0, padding: 0, lineHeight: 1, minHeight: 22 }}
             aria-expanded={createSectionExpanded}
             title={createSectionExpanded ? 'Collapse section' : 'Expand section'}
           >
-            <span style={{ display: 'flex', alignItems: 'center' }}>{createSectionExpanded ? '▼' : '▶'}</span>
-            <span style={{ color: '#232946', fontSize: 22, fontWeight: 700, marginLeft: 3, display: 'flex', alignItems: 'center', height: 22 }}>Create a Holacracy Organization</span>
+            <span style={{ display: 'flex', alignItems: 'center', fontSize: 16, color: '#4ecdc4' }}>{createSectionExpanded ? '▼' : '▶'}</span>
           </button>
+          <span style={{ color: '#232946', fontSize: 22, fontWeight: 700, display: 'flex', alignItems: 'center', height: 22 }}>Create a Holacracy Organization</span>
           <button
             onClick={() => setCreateInfoExpanded(e => !e)}
             style={{ background: 'none', border: 'none', color: '#4ecdc4', fontWeight: 600, fontSize: 16, cursor: 'pointer', textAlign: 'left', outline: 'none', display: 'flex', alignItems: 'center', gap: 8, margin: 0, padding: 0 }}
             aria-expanded={createInfoExpanded}
           >
-            <span style={{ textAlign: 'left', display: 'block' }}>{createInfoExpanded ? '▼' : '▶'} Info</span>
+            <span style={{ textAlign: 'left', display: 'block', color: '#4ecdc4' }}>{createInfoExpanded ? '▼' : '▶'} Info</span>
           </button>
         </div>
         {createInfoExpanded && (
@@ -1031,11 +1050,55 @@ function App() {
                     rowGap: 16,
                   }}>
                   <div style={{ flex: 1, minWidth: 220, marginRight: 8 }}>
-                    <label style={styles.label}>Organization Name</label>
+                                        <label style={styles.label}>
+                      <span
+                        ref={nameInfoAnchor}
+                        style={{
+                          cursor: 'pointer'
+                        }}
+                        onMouseEnter={() => setShowNameInfo(true)}
+                        onMouseLeave={() => setShowNameInfo(false)}
+                        onFocus={() => setShowNameInfo(true)}
+                        onBlur={() => setShowNameInfo(false)}
+                        tabIndex={0}
+                        aria-label="Info about organization name"
+                      >
+                        Organization Name
+                        <OverlayPortal
+                          anchorRef={nameInfoAnchor}
+                          visible={showNameInfo}
+                          style={holacracyInfoboxOverlayStyle}
+                        >
+                          Name of the organization
+                        </OverlayPortal>
+                      </span>
+                    </label>
                     <input style={styles.input} name="name" value={form.name} onChange={handleInput} required disabled={txPending || !account} placeholder="e.g., Regen DAO" />
                   </div>
                   <div style={{ flex: 2, minWidth: 260 }}>
-                    <label style={styles.label}>Organization Purpose</label>
+                                        <label style={styles.label}>
+                      <span
+                        ref={purposeInfoAnchor}
+                        style={{
+                          cursor: 'pointer'
+                        }}
+                        onMouseEnter={() => setShowPurposeInfo(true)}
+                        onMouseLeave={() => setShowPurposeInfo(false)}
+                        onFocus={() => setShowPurposeInfo(true)}
+                        onBlur={() => setShowPurposeInfo(false)}
+                        tabIndex={0}
+                        aria-label="Info about organization purpose"
+                      >
+                        Organization Purpose
+                        <OverlayPortal
+                          anchorRef={purposeInfoAnchor}
+                          visible={showPurposeInfo}
+                          style={holacracyInfoboxOverlayStyle}
+                        >
+                          Purpose of the organization
+                        </OverlayPortal>
+                      </span>
+                    </label>
                     <input style={styles.input} name="purpose" value={form.purpose} onChange={handleInput} required disabled={txPending || !account} placeholder="e.g., To catalyze regenerative collaboration" />
                   </div>
                   <div style={{ flex: '0 0 100%', display: 'flex', justifyContent: 'flex-start', minWidth: 220 }}>
@@ -1136,19 +1199,19 @@ function App() {
         <div style={{ display: 'flex', alignItems: 'center', minHeight: 28, justifyContent: 'flex-start', marginBottom: 8, position: 'relative', gap: 8 }}>
           <button
             onClick={() => setParticipateSectionExpanded(e => !e)}
-            style={{ background: 'none', border: 'none', color: '#232946', fontWeight: 700, fontSize: 22, cursor: 'pointer', textAlign: 'left', outline: 'none', display: 'flex', alignItems: 'center', gap: 5, margin: 0, padding: 0, lineHeight: 1, minHeight: 22 }}
+            style={{ background: 'none', border: 'none', color: '#232946', cursor: 'pointer', outline: 'none', display: 'flex', alignItems: 'center', margin: 0, padding: 0, lineHeight: 1, minHeight: 22 }}
             aria-expanded={participateSectionExpanded}
             title={participateSectionExpanded ? 'Collapse section' : 'Expand section'}
           >
-            <span style={{ display: 'flex', alignItems: 'center' }}>{participateSectionExpanded ? '▼' : '▶'}</span>
-            <span style={{ color: '#232946', fontSize: 22, fontWeight: 700, marginLeft: 3, display: 'flex', alignItems: 'center', height: 22 }}>Participate in a Holacracy Organization</span>
+            <span style={{ display: 'flex', alignItems: 'center', fontSize: 16, color: '#4ecdc4' }}>{participateSectionExpanded ? '▼' : '▶'}</span>
           </button>
+          <span style={{ color: '#232946', fontSize: 22, fontWeight: 700, display: 'flex', alignItems: 'center', height: 22 }}>Participate in a Holacracy Organization</span>
           <button
             onClick={() => setParticipateInfoExpanded(e => !e)}
             style={{ background: 'none', border: 'none', color: '#4ecdc4', fontWeight: 600, fontSize: 16, cursor: 'pointer', textAlign: 'left', outline: 'none', display: 'flex', alignItems: 'center', gap: 8, margin: 0, padding: 0 }}
             aria-expanded={participateInfoExpanded}
           >
-            <span style={{ textAlign: 'left', display: 'block' }}>{participateInfoExpanded ? '▼' : '▶'} Info</span>
+            <span style={{ textAlign: 'left', display: 'block', color: '#4ecdc4' }}>{participateInfoExpanded ? '▼' : '▶'} Info</span>
           </button>
         </div>
         {participateInfoExpanded && (
@@ -1164,18 +1227,60 @@ function App() {
               return (
                 <div key={org.id} style={styles.initiativeCard}>
                   <div
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: isExpanded ? 4 : 0, cursor: 'pointer', padding: '2px 0' }}
+                    style={{ display: 'flex', alignItems: 'center', marginBottom: isExpanded ? 4 : 0, cursor: 'pointer', padding: '2px 0' }}
                     onClick={() => setExpanded(prev => ({ ...prev, [`org-${org.id}`]: !isExpanded }))}
                   >
+                    <span style={{ fontSize: 12, transition: 'transform 0.2s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', marginRight: 8, color: '#4ecdc4' }}>
+                      ▼
+                    </span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontWeight: 600, fontSize: 16, color: '#232946' }}>
-                        {org.onChainDetails ? org.onChainDetails.name : org.name}
+                        <span
+                          ref={el => orgNameInfoAnchors.current[org.id] = el}
+                          style={{
+                            cursor: 'pointer'
+                          }}
+                          onMouseEnter={() => setShowOrgNameInfo(prev => ({ ...prev, [org.id]: true }))}
+                          onMouseLeave={() => setShowOrgNameInfo(prev => ({ ...prev, [org.id]: false }))}
+                          onFocus={() => setShowOrgNameInfo(prev => ({ ...prev, [org.id]: true }))}
+                          onBlur={() => setShowOrgNameInfo(prev => ({ ...prev, [org.id]: false }))}
+                          tabIndex={0}
+                          aria-label="Info about organization name"
+                        >
+                          {org.onChainDetails ? org.onChainDetails.name : org.name}
+                          <OverlayPortal
+                            anchorRef={{ current: orgNameInfoAnchors.current[org.id] }}
+                            visible={showOrgNameInfo[org.id]}
+                            style={holacracyInfoboxOverlayStyle}
+                          >
+                            Name of the organization
+                          </OverlayPortal>
+                        </span>
                       </div>
                       <div style={{ fontSize: 13, color: '#4a5568', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {org.onChainDetails ? org.onChainDetails.purpose : org.purpose}
+                        <span
+                          ref={el => orgPurposeInfoAnchors.current[org.id] = el}
+                          style={{
+                            cursor: 'pointer'
+                          }}
+                          onMouseEnter={() => setShowOrgPurposeInfo(prev => ({ ...prev, [org.id]: true }))}
+                          onMouseLeave={() => setShowOrgPurposeInfo(prev => ({ ...prev, [org.id]: false }))}
+                          onFocus={() => setShowOrgPurposeInfo(prev => ({ ...prev, [org.id]: true }))}
+                          onBlur={() => setShowOrgPurposeInfo(prev => ({ ...prev, [org.id]: false }))}
+                          tabIndex={0}
+                          aria-label="Info about organization purpose"
+                        >
+                          {org.onChainDetails ? org.onChainDetails.purpose : org.purpose}
+                          <OverlayPortal
+                            anchorRef={{ current: orgPurposeInfoAnchors.current[org.id] }}
+                            visible={showOrgPurposeInfo[org.id]}
+                            style={holacracyInfoboxOverlayStyle}
+                          >
+                            Purpose of the organization
+                          </OverlayPortal>
+                        </span>
                       </div>
                     </div>
-                    <Chevron down={isExpanded} />
                   </div>
                   {isExpanded && (
                     <>
@@ -1193,16 +1298,15 @@ function App() {
                             style={{ 
                               display: 'flex', 
                               alignItems: 'center', 
-                              justifyContent: 'space-between', 
                               cursor: 'pointer',
                               padding: '4px 0'
                             }}
                             onClick={() => setPartnersExpanded(prev => ({ ...prev, [org.id]: !prev[org.id] }))}
                           >
-                            <b>Partners ({org.partners.length}):</b>
-                            <span style={{ fontSize: 12, transition: 'transform 0.2s', transform: partnersExpanded[org.id] ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                            <span style={{ fontSize: 12, transition: 'transform 0.2s', transform: partnersExpanded[org.id] ? 'rotate(180deg)' : 'rotate(0deg)', marginRight: 8, color: '#4ecdc4' }}>
                               ▼
                             </span>
+                            <b>Partners ({org.partners.length}):</b>
                           </div>
                           {partnersExpanded[org.id] && (
                             <ul style={{ textAlign: 'left', margin: '8px 0 0 0', padding: 0, listStyle: 'none', maxHeight: 120, overflowY: 'auto' }}>
