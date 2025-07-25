@@ -12,105 +12,64 @@ import "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import "./Organization.sol";
 
 contract HolacracyFactory is Initializable, OwnableUpgradeable {
-    struct Initiative {
+    struct OrganizationMetadata {
         string name;
         string purpose;
         address creator;
-        address[] partners;
-        bool launched;
         address orgAddress;
     }
 
-    Initiative[] public initiatives;
-    mapping(uint256 => mapping(address => bool)) public isPartner; // initiativeId => signer => signed
+    OrganizationMetadata[] public organizationList;
     address public organizationBeacon;
-    string public constant constitutionURI = "https://www.holacracy.org/constitution/5-0/";
 
-    event InitiativeCreated(uint256 indexed id, string name, string purpose, address creator);
-    event ConstitutionSigned(uint256 indexed initiativeId, address partner);
-    event OrganizationDeployed(uint256 indexed initiativeId, address org, address[] founders);
+    event OrganizationMetadataCreated(uint256 indexed id, string name, string purpose, address creator);
+    event OrganizationDeployed(uint256 indexed metadataId, address org);
 
     function initialize(address _organizationBeacon, address _owner) public initializer {
         __Ownable_init(_owner);
         organizationBeacon = _organizationBeacon;
     }
 
-    function createInitiative(string memory name, string memory purpose) external {
-        Initiative storage newInit = initiatives.push();
-        newInit.name = name;
-        newInit.purpose = purpose;
-        newInit.creator = msg.sender;
-        emit InitiativeCreated(initiatives.length - 1, name, purpose, msg.sender);
-    }
-
-    // Join and sign the constitution for an initiative
-    function signConstitution(uint256 initiativeId) external {
-        require(initiativeId < initiatives.length, "Invalid initiative");
-        Initiative storage ini = initiatives[initiativeId];
-        require(!ini.launched, "Already launched");
-        require(!isPartner[initiativeId][msg.sender], "Already signed");
-        ini.partners.push(msg.sender);
-        isPartner[initiativeId][msg.sender] = true;
-        emit ConstitutionSigned(initiativeId, msg.sender);
-    }
-
-    // Deploy a new Organization as a BeaconProxy
-    function launchOrganization(uint256 initiativeId) external returns (address org) {
-        require(initiativeId < initiatives.length, "Invalid initiative");
-        Initiative storage init = initiatives[initiativeId];
-        require(!init.launched, "Already launched");
-        require(isPartner[initiativeId][msg.sender], "You must sign the constitution to launch");
-        require(init.partners.length > 0, "No partners signed");
+    // Create and launch organization directly
+    function createAndLaunchOrganization(string memory name, string memory purpose) external returns (address org) {
+        // Create organization metadata record
+        OrganizationMetadata storage orgRecord = organizationList.push();
+        orgRecord.name = name;
+        orgRecord.purpose = purpose;
+        orgRecord.creator = msg.sender;
         
-        // Encode the initialization data with name and purpose
+        // Launch immediately with simplified initialization
         bytes memory initDataWithNameAndPurpose = abi.encodeWithSelector(
             Organization.initialize.selector,
-            init.partners,
-            init.name,
-            init.purpose
+            name,
+            purpose,
+            msg.sender
         );
         
         org = address(new BeaconProxy(organizationBeacon, initDataWithNameAndPurpose));
-        init.launched = true;
-        init.orgAddress = org;
-        emit OrganizationDeployed(initiativeId, org, init.partners);
+        orgRecord.orgAddress = org;
+        
+        emit OrganizationMetadataCreated(organizationList.length - 1, name, purpose, msg.sender);
+        emit OrganizationDeployed(organizationList.length - 1, org);
     }
 
-    function getInitiativesCount() external view returns (uint256) {
-        return initiatives.length;
+    function getOrganizationListCount() external view returns (uint256) {
+        return organizationList.length;
     }
 
-    function getPartners(uint256 initiativeId) external view returns (address[] memory) {
-        require(initiativeId < initiatives.length, "Invalid initiative");
-        return initiatives[initiativeId].partners;
-    }
-
-    function getInitiative(uint256 i) public view returns (
+    function getOrganizationMetadata(uint256 i) public view returns (
         string memory name,
         string memory purpose,
         address creator,
-        address[] memory partners,
-        bool launched,
         address orgAddress
     ) {
-        Initiative storage ini = initiatives[i];
-        return (ini.name, ini.purpose, ini.creator, ini.partners, ini.launched, ini.orgAddress);
+        OrganizationMetadata storage metadata = organizationList[i];
+        return (metadata.name, metadata.purpose, metadata.creator, metadata.orgAddress);
     }
 
     /// @notice Update the organization beacon address (onlyOwner)
     function setOrganizationBeacon(address newBeacon) external onlyOwner {
         require(newBeacon != address(0), "Invalid address");
         organizationBeacon = newBeacon;
-    }
-
-    function version() public pure returns (string memory) {
-        return "HolacracyFactory (Beacon) v1";
-    }
-
-    // 20 July 2025 - Upgrade test
-    string public upgradeTestMessage;
-
-    function setUpgradeTestMessage(string calldata message) external {
-        upgradeTestMessage = message;
     }
 }

@@ -19,7 +19,7 @@ async function verifyWithLog(address, constructorArguments = [], contract = unde
 
 async function main() {
   // 1. Deploy Organization implementation
-  const Organization = await ethers.getContractFactory("Organization");
+  const Organization = await ethers.getContractFactory("contracts/Organization.sol:Organization");
   const organizationImpl = await Organization.deploy();
   await organizationImpl.waitForDeployment();
   const orgImplAddress = await organizationImpl.getAddress();
@@ -34,7 +34,7 @@ async function main() {
 
   // 3. Deploy HolacracyFactory as a transparent proxy (NOT a beacon proxy)
   //    The factory manages Organization deployments via the beacon.
-  const HolacracyFactory = await ethers.getContractFactory("HolacracyFactory");
+  const HolacracyFactory = await ethers.getContractFactory("contracts/HolacracyFactory.sol:HolacracyFactory");
   const [deployer] = await ethers.getSigners();
   const factoryProxy = await upgrades.deployProxy(
     HolacracyFactory,

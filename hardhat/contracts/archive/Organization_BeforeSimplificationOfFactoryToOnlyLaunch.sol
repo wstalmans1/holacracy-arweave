@@ -10,17 +10,23 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract Organization is Initializable, OwnableUpgradeable {
-    string public name;
-    string public purpose;
     address[] public partners;
     mapping(address => bool) public hasSignedConstitution;
+    string public constant constitutionURI = "https://www.holacracy.org/constitution/5-0/";
+    
+    // New storage variables (added at the end to maintain storage layout)
+    /// @notice The name of the organization
+    string public name;
+    /// @notice The purpose that guides the organization's activities and decisions
+    string public purpose;
 
     /// @notice Emitted when the organization is initialized
+    /// @param founders The initial set of partners who founded the organization
     /// @param name The name of the organization
-    /// @param purpose The purpose that will guide the organization
-    event Initialized(string name, string purpose);
-
-    /// @notice Emitted when a partner signs the constitution
+    /// @param purpose The purpose of the organization
+    event Initialized(address[] founders, string name, string purpose);
+    
+    /// @notice Emitted when a new partner signs the constitution
     /// @param partner The address of the partner who signed
     event ConstitutionSigned(address indexed partner);
 
@@ -34,27 +40,30 @@ contract Organization is Initializable, OwnableUpgradeable {
     /// @param newPurpose The new purpose
     event PurposeUpdated(string oldPurpose, string newPurpose);
 
-    /// @notice Initializes the organization with its name and purpose
+    /// @notice Initializes the organization with its founding partners, name, and purpose
+    /// @param _founders Array of addresses that will be the initial partners
     /// @param _name The name of the organization
     /// @param _purpose The purpose that will guide the organization
-    /// @param _creator The address of the organization creator
     /// @dev This function can only be called once due to the initializer modifier
     function initialize(
+        address[] memory _founders,
         string memory _name,
-        string memory _purpose,
-        address _creator
+        string memory _purpose
     ) public initializer {
+        require(_founders.length > 0, "No founders");
         require(bytes(_name).length > 0, "Empty name");
         require(bytes(_purpose).length > 0, "Empty purpose");
-        require(_creator != address(0), "Invalid creator address");
+        
+        for (uint256 i = 0; i < _founders.length; i++) {
+            partners.push(_founders[i]);
+            hasSignedConstitution[_founders[i]] = true;
+        }
+        __Ownable_init(_founders[0]);
         
         name = _name;
         purpose = _purpose;
         
-        // Set the creator as the owner
-        __Ownable_init(_creator);
-        
-        emit Initialized(_name, _purpose);
+        emit Initialized(_founders, _name, _purpose);
     }
 
     /// @notice Allows anyone to join the organization by signing the constitution
