@@ -84,8 +84,8 @@ const styles = {
   initiativeCard: {
     background: '#f3f7fa',
     borderRadius: 8,
-    padding: 18,
-    marginBottom: 18,
+    padding: 12,
+    marginBottom: 8,
     boxShadow: '0 1px 4px rgba(44,62,80,0.04)',
   },
   orgTable: {
@@ -205,6 +205,190 @@ function OverlayPortal({ anchorRef, visible, children, style, onMouseEnter, onMo
   );
 }
 
+// Organization Details Overlay Component
+function OrganizationDetailsOverlay({ org, open, onClose, account, loadOrgs, OrganizationActionsComponent }) {
+  if (!open || !org) return null;
+  
+  return ReactDOM.createPortal(
+    <div 
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000,
+        padding: '20px'
+      }}
+      onClick={onClose}
+    >
+      <div 
+        style={{
+          background: '#fff',
+          borderRadius: 12,
+          padding: '32px',
+          maxWidth: '600px',
+          width: '100%',
+          maxHeight: '80vh',
+          overflowY: 'auto',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          position: 'relative'
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: '16px',
+            right: '16px',
+            background: 'none',
+            border: 'none',
+            fontSize: '24px',
+            cursor: 'pointer',
+            color: '#888',
+            padding: '4px',
+            borderRadius: '4px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '32px',
+            height: '32px'
+          }}
+          title="Close"
+        >
+          ×
+        </button>
+
+        {/* Organization Header */}
+        <div style={{ marginBottom: '24px' }}>
+          <h2 style={{ 
+            margin: '0 0 8px 0', 
+            fontSize: '24px', 
+            fontWeight: '700', 
+            color: '#232946' 
+          }}>
+            {org.onChainDetails ? org.onChainDetails.name : org.name}
+          </h2>
+          <p style={{ 
+            margin: '0', 
+            fontSize: '16px', 
+            color: '#4a5568', 
+            lineHeight: '1.5' 
+          }}>
+            {org.onChainDetails ? org.onChainDetails.purpose : org.purpose}
+          </p>
+        </div>
+
+        {/* Organization Actions */}
+        <div style={{ marginBottom: '24px' }}>
+          <OrganizationActionsComponent 
+            org={org}
+            onUpdate={loadOrgs}
+          />
+        </div>
+
+        {/* Partners Section */}
+        <div style={{ marginBottom: '24px' }}>
+          <h3 style={{ 
+            margin: '0 0 12px 0', 
+            fontSize: '18px', 
+            fontWeight: '600', 
+            color: '#232946' 
+          }}>
+            Partners ({org.partners.length})
+          </h3>
+          <div style={{ 
+            display: 'flex', 
+            flexWrap: 'wrap', 
+            gap: '8px',
+            maxHeight: '200px',
+            overflowY: 'auto',
+            padding: '12px',
+            background: '#f7fafd',
+            borderRadius: '8px',
+            border: '1px solid #e3eaf2'
+          }}>
+            {org.partners.length === 0 ? (
+              <div style={{ color: '#888', fontStyle: 'italic' }}>No partners yet</div>
+            ) : (
+              org.partners.map(addr => (
+                <div key={addr} style={{ 
+                  fontFamily: 'monospace', 
+                  fontSize: '13px', 
+                  color: '#232946', 
+                  background: addr.toLowerCase() === account?.toLowerCase() ? '#4ecdc4' : '#e3eaf2', 
+                  borderRadius: '6px', 
+                  padding: '6px 10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}>
+                  <span>{addr}</span>
+                  {addr.toLowerCase() === account?.toLowerCase() && (
+                    <span style={{ 
+                      fontSize: '11px', 
+                      color: '#fff',
+                      background: '#232946',
+                      padding: '2px 6px',
+                      borderRadius: '4px'
+                    }}>
+                      You
+                    </span>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Organization Details */}
+        <div style={{ 
+          padding: '16px',
+          background: '#f7fafd',
+          borderRadius: '8px',
+          border: '1px solid #e3eaf2'
+        }}>
+          <h3 style={{ 
+            margin: '0 0 12px 0', 
+            fontSize: '16px', 
+            fontWeight: '600', 
+            color: '#232946' 
+          }}>
+            Organization Details
+          </h3>
+          <div style={{ fontSize: '14px', color: '#4a5568', lineHeight: '1.6' }}>
+            <div style={{ marginBottom: '8px' }}>
+              <strong>Creator:</strong> {org.creator}
+            </div>
+            <div style={{ marginBottom: '8px' }}>
+              <strong>Contract Address:</strong> 
+              <a 
+                href={`https://sepolia.etherscan.io/address/${org.address}`} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                style={{ 
+                  color: '#4ecdc4', 
+                  textDecoration: 'underline',
+                  marginLeft: '4px'
+                }}
+              >
+                {org.address}
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 function App() {
   const [account, setAccount] = useState();
   const [factory, setFactory] = useState();
@@ -216,7 +400,6 @@ function App() {
   const [txPending, setTxPending] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
-  const [expanded, setExpanded] = useState({}); // { [initiativeId]: true/false }
   const [launchModal, setLaunchModal] = useState({ open: false, initiative: null, partners: [] });
   const [dappTopInfoVisible, setDappTopInfoVisible] = useState(false);
   const dappTopInfoTimer = React.useRef();
@@ -230,13 +413,11 @@ function App() {
   // Add refs for the anchors
   const holacracyTopInfoAnchor = React.useRef();
   const dappTopInfoAnchor = React.useRef();
-  const orgNameInfoAnchors = React.useRef({});
-  const orgPurposeInfoAnchors = React.useRef({});
   const [participateInfoExpanded, setParticipateInfoExpanded] = useState(false);
   const [participateSectionExpanded, setParticipateSectionExpanded] = useState(false);
-  const [partnersExpanded, setPartnersExpanded] = useState({});
-  const [showOrgNameInfo, setShowOrgNameInfo] = useState({});
-  const [showOrgPurposeInfo, setShowOrgPurposeInfo] = useState({});
+  const [selectedOrg, setSelectedOrg] = useState(null);
+  const [orgDetailsOverlayOpen, setOrgDetailsOverlayOpen] = useState(false);
+  const [expanded, setExpanded] = useState({}); // For create organization card
 
   useEffect(() => {
     async function fetchEnsAndBalanceAndNetwork() {
@@ -945,10 +1126,10 @@ function App() {
         {/* Create Organization Card - Always Visible */}
         <div style={styles.initiativeCard}>
           <div
-            style={{ display: 'flex', alignItems: 'center', marginBottom: expanded['create-org'] ? 4 : 0, cursor: 'pointer', padding: '2px 0' }}
+            style={{ display: 'flex', alignItems: 'center', marginBottom: expanded['create-org'] ? 2 : 0, cursor: 'pointer', padding: '1px 0' }}
             onClick={() => setExpanded(prev => ({ ...prev, 'create-org': !prev['create-org'] }))}
           >
-            <span style={{ fontSize: 12, transition: 'transform 0.2s', transform: expanded['create-org'] ? 'rotate(90deg)' : 'rotate(0deg)', marginRight: 8, color: '#4ecdc4' }}>
+            <span style={{ fontSize: 12, transition: 'transform 0.2s', transform: expanded['create-org'] ? 'rotate(90deg)' : 'rotate(0deg)', marginRight: 6, color: '#4ecdc4' }}>
               ▶
             </span>
             <div style={{ fontWeight: 600, fontSize: 16, color: '#232946' }}>
@@ -970,15 +1151,16 @@ function App() {
                     alignItems: 'flex-end',
                     columnGap: 28,
                     rowGap: 8,
+                    paddingLeft: 20,
                   }}>
-                  <div style={{ flex: 1, minWidth: 220, marginRight: 8 }}>
-                    <label style={styles.label}>
+                  <div style={{ flex: 1, minWidth: 220, maxWidth: '45%', marginRight: 8 }}>
+                    <label style={{ ...styles.label, marginTop: 8 }}>
                       Organization Name
                     </label>
                     <input style={styles.input} name="name" value={form.name} onChange={handleInput} required disabled={txPending || !account} placeholder="e.g., Regen DAO" />
                   </div>
-                  <div style={{ flex: 2, minWidth: 260 }}>
-                    <label style={styles.label}>
+                  <div style={{ flex: 1, minWidth: 260, maxWidth: '45%' }}>
+                    <label style={{ ...styles.label, marginTop: 8 }}>
                       Organization Purpose
                     </label>
                     <input style={styles.input} name="purpose" value={form.purpose} onChange={handleInput} required disabled={txPending || !account} placeholder="e.g., To catalyze regenerative collaboration" />
@@ -995,7 +1177,7 @@ function App() {
           )}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', minHeight: 28, justifyContent: 'flex-start', marginBottom: 8, position: 'relative', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', minHeight: 24, justifyContent: 'flex-start', marginBottom: 20, marginTop: 32, position: 'relative', gap: 6 }}>
           <button
             onClick={() => setParticipateSectionExpanded(e => !e)}
             style={{ background: 'none', border: 'none', color: '#232946', cursor: 'pointer', outline: 'none', display: 'flex', alignItems: 'center', margin: 0, padding: 0, lineHeight: 1, minHeight: 22 }}
@@ -1014,7 +1196,7 @@ function App() {
           </button>
         </div>
         {participateInfoExpanded && (
-          <div style={{ marginTop: 8, marginBottom: 24, color: '#888', fontSize: 15, textAlign: 'justify', lineHeight: 1.6, background: '#f7fafd', border: '1px solid #e3eaf2', borderRadius: 10, boxShadow: '0 1px 4px rgba(44,62,80,0.04)', padding: '22px 28px', maxWidth: 700, marginLeft: 'auto', marginRight: 'auto' }}>
+          <div style={{ marginTop: 4, marginBottom: 16, color: '#888', fontSize: 15, textAlign: 'justify', lineHeight: 1.6, background: '#f7fafd', border: '1px solid #e3eaf2', borderRadius: 10, boxShadow: '0 1px 4px rgba(44,62,80,0.04)', padding: '16px 20px', maxWidth: 700, marginLeft: 'auto', marginRight: 'auto' }}>
             <b>Participating in a Holacracy Organization:</b><br/>
             Once an organization is launched, you can participate as a founder or join as a partner. Founders are those who signed the Constitution and were assigned initial roles at launch. Partners can join later by signing the Constitution and taking on roles as the organization evolves. Participation means you operate under the Holacracy Constitution, with clear roles, accountabilities, and the ability to propose changes through governance.
           </div>
@@ -1022,125 +1204,37 @@ function App() {
         {participateSectionExpanded && (
           <>
             {/* Organizations List */}
-            {orgs.length === 0 ? <div style={{ color: '#888', marginTop: 16 }}>No organizations deployed yet.</div> : (
-              orgs.map((org, idx) => {
-                const isExpanded = expanded[`org-${org.id}`];
-                return (
-                  <div key={org.id} style={styles.initiativeCard}>
-                    <div
-                      style={{ display: 'flex', alignItems: 'center', marginBottom: isExpanded ? 4 : 0, cursor: 'pointer', padding: '2px 0' }}
-                      onClick={() => setExpanded(prev => ({ ...prev, [`org-${org.id}`]: !isExpanded }))}
-                    >
-                      <span style={{ fontSize: 12, transition: 'transform 0.2s', transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)', marginRight: 8, color: '#4ecdc4' }}>
-                        ▶
-                      </span>
-                      <div style={{ flex: 1, minWidth: 0 }}>
+            {orgs.length === 0 ? <div style={{ color: '#888', marginTop: 8 }}>No organizations deployed yet.</div> : (
+              orgs.map((org, idx) => (
+                <div key={org.id} style={styles.initiativeCard}>
+                  <div
+                    style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', padding: '4px 0' }}
+                    onClick={() => {
+                      setSelectedOrg(org);
+                      setOrgDetailsOverlayOpen(true);
+                    }}
+                  >
+                                          <div style={{ flex: 1, minWidth: 0, paddingLeft: 12 }}>
                         <div style={{ fontWeight: 600, fontSize: 16, color: '#232946' }}>
-                          <span
-                            ref={el => orgNameInfoAnchors.current[org.id] = el}
-                            style={{
-                              cursor: 'pointer'
-                            }}
-                            onMouseEnter={() => setShowOrgNameInfo(prev => ({ ...prev, [org.id]: true }))}
-                            onMouseLeave={() => setShowOrgNameInfo(prev => ({ ...prev, [org.id]: false }))}
-                            onFocus={() => setShowOrgNameInfo(prev => ({ ...prev, [org.id]: true }))}
-                            onBlur={() => setShowOrgNameInfo(prev => ({ ...prev, [org.id]: false }))}
-                            tabIndex={0}
-                            aria-label="Info about organization name"
-                          >
-                            {org.onChainDetails ? org.onChainDetails.name : org.name}
-                            <OverlayPortal
-                              anchorRef={{ current: orgNameInfoAnchors.current[org.id] }}
-                              visible={showOrgNameInfo[org.id]}
-                              style={holacracyInfoboxOverlayStyle}
-                            >
-                              Name of the organization
-                            </OverlayPortal>
-                          </span>
+                          {org.onChainDetails ? org.onChainDetails.name : org.name}
                         </div>
                         <div style={{ fontSize: 13, color: '#4a5568', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          <span
-                            ref={el => orgPurposeInfoAnchors.current[org.id] = el}
-                            style={{
-                              cursor: 'pointer'
-                            }}
-                            onMouseEnter={() => setShowOrgPurposeInfo(prev => ({ ...prev, [org.id]: true }))}
-                            onMouseLeave={() => setShowOrgPurposeInfo(prev => ({ ...prev, [org.id]: false }))}
-                            onFocus={() => setShowOrgPurposeInfo(prev => ({ ...prev, [org.id]: true }))}
-                            onBlur={() => setShowOrgPurposeInfo(prev => ({ ...prev, [org.id]: false }))}
-                            tabIndex={0}
-                            aria-label="Info about organization purpose"
-                          >
-                            {org.onChainDetails ? org.onChainDetails.purpose : org.purpose}
-                            <OverlayPortal
-                              anchorRef={{ current: orgPurposeInfoAnchors.current[org.id] }}
-                              visible={showOrgPurposeInfo[org.id]}
-                              style={holacracyInfoboxOverlayStyle}
-                            >
-                              Purpose of the organization
-                            </OverlayPortal>
-                          </span>
+                          {org.onChainDetails ? org.onChainDetails.purpose : org.purpose}
                         </div>
                       </div>
+                    <div style={{ 
+                      fontSize: 12, 
+                      color: '#4ecdc4', 
+                      marginLeft: 8,
+                      display: 'flex',
+                      alignItems: 'center'
+                    }}>
+                      <span style={{ marginRight: 4 }}>View Details</span>
+                      <span>▶</span>
                     </div>
-                    {isExpanded && (
-                      <>
-                        <div style={styles.orgInfo}>
-                          {/* Organization Actions Section */}
-                          <div style={{ marginTop: 16 }}>
-                            <OrganizationActions 
-                              org={org}
-                              onUpdate={loadOrgs}
-                            />
-                          </div>
-                          <div style={{ fontSize: 13, color: '#888', marginTop: 8 }}>
-                            <div 
-                              style={{ 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                cursor: 'pointer',
-                                padding: '4px 0'
-                              }}
-                              onClick={() => setPartnersExpanded(prev => ({ ...prev, [org.id]: !prev[org.id] }))}
-                            >
-                              <span style={{ fontSize: 12, transition: 'transform 0.2s', transform: partnersExpanded[org.id] ? 'rotate(90deg)' : 'rotate(0deg)', marginRight: 8, color: '#4ecdc4' }}>
-                                ▶
-                              </span>
-                              <b>Partners ({org.partners.length}):</b>
-                            </div>
-                            {partnersExpanded[org.id] && (
-                              <ul style={{ textAlign: 'left', margin: '8px 0 0 0', padding: 0, listStyle: 'none', maxHeight: 120, overflowY: 'auto' }}>
-                                {org.partners.map(addr => (
-                                  <li key={addr} style={{ 
-                                    fontFamily: 'monospace', 
-                                    fontSize: 12, 
-                                    color: '#232946', 
-                                    background: addr.toLowerCase() === account?.toLowerCase() ? '#4ecdc4' : '#e3eaf2', 
-                                    borderRadius: 4, 
-                                    padding: '2px 6px', 
-                                    marginBottom: 2, 
-                                    display: 'inline-block', 
-                                    marginRight: 4
-                                  }}>
-                                    {addr}
-                                    {addr.toLowerCase() === account?.toLowerCase() && (
-                                      <span style={{ marginLeft: 4, fontSize: 10, color: '#fff' }}>← You</span>
-                                    )}
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
-                          </div>
-                          <div style={{ fontSize: 13, color: '#888', marginTop: 4 }}>
-                            <div><b>Creator:</b> {org.creator}</div>
-                            <div><b>Contract:</b> <a href={`https://sepolia.etherscan.io/address/${org.address}`} target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>{org.address}</a></div>
-                          </div>
-                        </div>
-                      </>
-                    )}
                   </div>
-                );
-              })
+                </div>
+              ))
             )}
           </>
         )}
@@ -1150,6 +1244,19 @@ function App() {
         This project incorporates and builds upon the Holacracy Constitution and related materials developed by <a href="https://www.holacracy.org/" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>HolacracyOne</a>.<br />
         The Holacracy Constitution is available at <a href="https://www.holacracy.org/constitution/5-0/" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>holacracy.org/constitution/5-0/</a> and is licensed under CC BY-SA 4.0.
       </div>
+      {/* Organization Details Overlay */}
+      <OrganizationDetailsOverlay
+        org={selectedOrg}
+        open={orgDetailsOverlayOpen}
+        onClose={() => {
+          setOrgDetailsOverlayOpen(false);
+          setSelectedOrg(null);
+        }}
+        account={account}
+        loadOrgs={loadOrgs}
+        OrganizationActionsComponent={OrganizationActions}
+      />
+      
       {/* Overlay for pending blockchain transaction */}
       <TransactionPendingOverlay
         open={anyTxPending}
