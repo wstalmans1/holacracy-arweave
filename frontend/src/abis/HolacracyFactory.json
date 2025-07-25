@@ -332,11 +332,6 @@
         "internalType": "uint256",
         "name": "initiativeId",
         "type": "uint256"
-      },
-      {
-        "internalType": "bytes",
-        "name": "initData",
-        "type": "bytes"
       }
     ],
     "name": "launchOrganization",

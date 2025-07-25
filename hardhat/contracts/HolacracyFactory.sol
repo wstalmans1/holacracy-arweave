@@ -55,7 +55,7 @@ contract HolacracyFactory is Initializable, OwnableUpgradeable {
     }
 
     // Deploy a new Organization as a BeaconProxy
-    function launchOrganization(uint256 initiativeId, bytes memory initData) external returns (address org) {
+    function launchOrganization(uint256 initiativeId) external returns (address org) {
         require(initiativeId < initiatives.length, "Invalid initiative");
         Initiative storage init = initiatives[initiativeId];
         require(!init.launched, "Already launched");

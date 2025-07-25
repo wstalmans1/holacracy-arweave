@@ -498,15 +498,12 @@ function App() {
 
   useEffect(() => {
     loadOrgs();
-  }, [factory, readFactory, txPending, loadOrgs]);
+  }, [factory, readFactory, txPending, loadOrgs, reloadKey]);
 
   // Helper to check if any transaction is pending
   const anyTxPending = txPending || Object.values(cardStatus).some(status => status?.pending);
 
-  // Add a simple chevron SVG for expand/collapse
-  const Chevron = ({ down }) => (
-    <svg width="18" height="18" style={{ marginLeft: 8, transition: 'transform 0.2s', transform: down ? 'rotate(180deg)' : 'rotate(0deg)' }} viewBox="0 0 20 20" fill="none"><path d="M6 8l4 4 4-4" stroke="#232946" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-  );
+
 
   // OrganizationActions component - dropdown menu for all organization interactions
   function OrganizationActions({ org, onUpdate }) {
@@ -1143,7 +1140,22 @@ function App() {
                             Partners ({ini.partners.length}):
                             <ul style={{ margin: '4px 0 0 0', padding: 0, listStyle: 'none', maxHeight: 60, overflowY: 'auto' }}>
                               {ini.partners.map(addr => (
-                                <li key={addr} style={{ fontFamily: 'monospace', fontSize: 12, color: '#232946', background: '#e3eaf2', borderRadius: 4, padding: '2px 6px', marginBottom: 2, display: 'inline-block', marginRight: 4 }}>{addr}</li>
+                                <li key={addr} style={{ 
+                                  fontFamily: 'monospace', 
+                                  fontSize: 12, 
+                                  color: '#232946', 
+                                  background: addr.toLowerCase() === account?.toLowerCase() ? '#4ecdc4' : '#e3eaf2', 
+                                  borderRadius: 4, 
+                                  padding: '2px 6px', 
+                                  marginBottom: 2, 
+                                  display: 'inline-block', 
+                                  marginRight: 4
+                                }}>
+                                  {addr}
+                                  {addr.toLowerCase() === account?.toLowerCase() && (
+                                    <span style={{ marginLeft: 4, fontSize: 10, color: '#fff' }}>← You</span>
+                                  )}
+                                </li>
                               ))}
                             </ul>
                           </div>
@@ -1157,10 +1169,11 @@ function App() {
                                     To join this organization as a partner, you declare that you understand that <span style={{ color: '#1a5f7a', fontWeight: 600 }}>In a Holacracy, all authority derives from the Constitution, not from individuals</span>. You confirm your understanding by signing the <a href="https://www.holacracy.org/constitution/5-0/" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>Holacracy Constitution</a>.
                                   </div>
                                 )}
-                                {isPartner ? (
-                                  <span style={{ color: '#4ecdc4', fontWeight: 500, fontSize: 14, marginRight: 8 }}>You are a partner</span>
-                                ) : (
-                                  <button style={styles.button} onClick={e => { e.stopPropagation(); joinInitiative(ini.id); }} disabled={cardStatus[ini.id]?.pending}>Sign the Constitution to Join as a Partner</button>
+                                {!isPartner && (
+                                  <div style={{ marginBottom: 8 }}>
+                                    <span style={{ color: '#ee6c4d', fontWeight: 500, fontSize: 14, marginRight: 8 }}>You are not yet a partner</span>
+                                    <button style={styles.button} onClick={e => { e.stopPropagation(); joinInitiative(ini.id); }} disabled={cardStatus[ini.id]?.pending}>Sign the Constitution to Join as a Partner</button>
+                                  </div>
                                 )}
                                 {ini.partners.length > 0 && isPartner && (
                                   <button style={{ ...styles.button, marginLeft: 8 }} onClick={e => { e.stopPropagation(); setLaunchModal({ open: true, initiative: ini, partners: ini.partners }); }} disabled={txPending}>Launch as Holacracy Organization</button>
@@ -1194,7 +1207,12 @@ function App() {
         partners={launchModal.partners}
         onDeployed={() => {
           setLaunchModal({ open: false, initiative: null, partners: [] });
+          // Immediate refresh
           setReloadKey(k => k + 1);
+          // Delayed refresh to ensure blockchain state is fully updated
+          setTimeout(() => {
+            setReloadKey(k => k + 1);
+          }, 3000);
         }}
       />
       <div style={styles.section}>

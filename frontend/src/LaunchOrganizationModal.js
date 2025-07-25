@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import TransactionPendingOverlay from './TransactionPendingOverlay';
 import factoryAbi from './abis/HolacracyFactory.json';
 import addresses from './contractAddresses.json';
@@ -21,6 +21,19 @@ function LaunchOrganizationModal({ open, onClose, initiative, partners, onDeploy
   const [deployError, setDeployError] = useState('');
   const [orgAddress, setOrgAddress] = useState('');
 
+  // Reset modal state when initiative changes or modal opens
+  useEffect(() => {
+    if (open && initiative) {
+      setStep(0);
+      setRoles([{ name: '', purpose: '', domains: [''], accountabilities: [''] }]);
+      setAssignments([]);
+      setDeploying(false);
+      setDeployError('');
+      setOrgAddress('');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, initiative?.id]);
+
   if (!open) return null;
 
   const handleDeploy = async () => {
@@ -34,7 +47,7 @@ function LaunchOrganizationModal({ open, onClose, initiative, partners, onDeploy
       const factory = new ethers.Contract(FACTORY_ADDRESS, getAbiArray(factoryAbi), signer);
       
       // Launch the organization - the factory will handle initialization data
-      const tx = await factory.launchOrganization(initiative.id, '0x');
+      const tx = await factory.launchOrganization(initiative.id);
       const receipt = await tx.wait();
       let orgAddr = '';
       for (const log of receipt.logs) {

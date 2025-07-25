@@ -47,7 +47,7 @@ describe("HolacracyFactory", function () {
     });
 
     it("Should create organization with correct name and purpose", async function () {
-      const tx = await factory.connect(addr1).launchOrganization(initiativeId, "0x");
+      const tx = await factory.connect(addr1).launchOrganization(initiativeId);
       const receipt = await tx.wait();
       
       // Get the organization address from the event
@@ -63,7 +63,7 @@ describe("HolacracyFactory", function () {
     });
 
     it("Should emit OrganizationDeployed event", async function () {
-      await expect(factory.connect(addr1).launchOrganization(initiativeId, "0x"))
+      await expect(factory.connect(addr1).launchOrganization(initiativeId))
         .to.emit(factory, "OrganizationDeployed");
     });
   });
