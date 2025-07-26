@@ -727,6 +727,12 @@ function App() {
                               e.preventDefault();
                               if (signingPending) return;
                               
+                              // Check if wallet is connected
+                              if (!account) {
+                                alert('Please connect your wallet first before signing the constitution.');
+                                return;
+                              }
+                              
                               setSigningPending(true);
                               try {
                                 // Get the organization contract with proper signer
@@ -817,6 +823,7 @@ function App() {
                   currentName={org.onChainDetails.name}
                   currentPurpose={org.onChainDetails.purpose}
                   onUpdate={onUpdate}
+                  account={account}
                 />
               )}
               {activeTab === 'roles' && (
@@ -847,7 +854,7 @@ function App() {
                 }
 
   // UpdateOrganizationForm component defined inside App to access loadOrgs
-  function UpdateOrganizationForm({ orgAddress, currentName, currentPurpose, onUpdate }) {
+  function UpdateOrganizationForm({ orgAddress, currentName, currentPurpose, onUpdate, account }) {
     const [newName, setNewName] = useState(currentName);
     const [newPurpose, setNewPurpose] = useState(currentPurpose);
     const [pending, setPending] = useState(false);
@@ -861,6 +868,13 @@ function App() {
       setSuccess("");
 
       try {
+        // Check if wallet is connected
+        if (!account) {
+          setError("Please connect your wallet first before updating organization details.");
+          setPending(false);
+          return;
+        }
+
         // Get the organization contract with proper signer
         const provider = new ethers.BrowserProvider(window.ethereum);
         const signer = await provider.getSigner();
@@ -1215,11 +1229,10 @@ function App() {
                     }}
                   >
                                           <div style={{ flex: 1, minWidth: 0, paddingLeft: 12 }}>
-                        <div style={{ fontWeight: 600, fontSize: 16, color: '#232946' }}>
-                          {org.onChainDetails ? org.onChainDetails.name : org.name}
-                        </div>
-                        <div style={{ fontSize: 13, color: '#4a5568', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {org.onChainDetails ? org.onChainDetails.purpose : org.purpose}
+                        <div style={{ fontSize: 14, color: '#232946', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <span style={{ fontWeight: 600 }}>{org.onChainDetails ? org.onChainDetails.name : org.name}</span>
+                          <span style={{ color: '#888', margin: '0 8px' }}>—</span>
+                          <span style={{ color: '#4a5568' }}>{org.onChainDetails ? org.onChainDetails.purpose : org.purpose}</span>
                         </div>
                       </div>
                     <div style={{ 
@@ -1246,7 +1259,7 @@ function App() {
       </div>
       {/* Organization Details Overlay */}
       <OrganizationDetailsOverlay
-        org={selectedOrg}
+        org={selectedOrg ? orgs.find(o => o.id === selectedOrg.id) || selectedOrg : null}
         open={orgDetailsOverlayOpen}
         onClose={() => {
           setOrgDetailsOverlayOpen(false);
