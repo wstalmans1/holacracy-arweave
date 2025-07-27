@@ -263,7 +263,6 @@ function OrganizationDetailsOverlay({ org, open, onClose, account, loadOrgs, Org
             width: '32px',
             height: '32px'
           }}
-          title="Close"
         >
           ×
         </button>
@@ -471,7 +470,7 @@ function OrganizationDetailsOverlay({ org, open, onClose, account, loadOrgs, Org
 }
 
 // Create Organization Modal Component
-function CreateOrganizationModal({ open, onClose, account, connecting, connectWallet, form, handleInput, createInitiative, txPending, error, success, createOrgNameInputRef, createOrgTooltipVisible, showCreateOrgTooltip, hideCreateOrgTooltipImmediately }) {
+function CreateOrganizationModal({ open, onClose, account, connecting, connectWallet, form, handleInput, createInitiative, txPending, error, success, createOrgNameInputRef, createOrgTooltipVisible, showCreateOrgTooltip, hideCreateOrgTooltipImmediately, modalSuccess }) {
   if (!open) return null;
   
   return ReactDOM.createPortal(
@@ -539,7 +538,51 @@ function CreateOrganizationModal({ open, onClose, account, connecting, connectWa
         </h2>
 
         {/* Content */}
-        {!account ? (
+        {modalSuccess ? (
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ 
+              color: '#4ecdc4', 
+              fontSize: '48px', 
+              marginBottom: '16px',
+              display: 'flex',
+              justifyContent: 'center'
+            }}>
+              ✅
+            </div>
+            <h3 style={{ 
+              color: '#232946', 
+              fontSize: '20px', 
+              fontWeight: '700',
+              marginBottom: '16px'
+            }}>
+              Organization Created!
+            </h3>
+            <p style={{ 
+              color: '#666', 
+              marginBottom: '24px',
+              fontSize: '14px',
+              wordBreak: 'break-all'
+            }}>
+              {modalSuccess}
+            </p>
+            <button 
+              style={{
+                background: '#4ecdc4',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '12px 24px',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                width: '100%'
+              }} 
+              onClick={onClose}
+            >
+              Close
+            </button>
+          </div>
+        ) : !account ? (
           <div style={{ textAlign: 'center' }}>
             <p style={{ color: '#666', marginBottom: '20px' }}>
               Connect your wallet to create a new Holacracy organization
@@ -726,6 +769,7 @@ function App() {
   const createOrgTooltipTimer = React.useRef();
 
   const [createOrgModalOpen, setCreateOrgModalOpen] = useState(false);
+  const [createOrgModalSuccess, setCreateOrgModalSuccess] = useState("");
   const nameInputRef = React.useRef();
   const purposeInputRef = React.useRef();
   const createOrgNameInputRef = React.useRef();
@@ -896,9 +940,9 @@ function App() {
       }
       
       setSuccess(`Organization launched! Address: ${orgAddress}`);
+      setCreateOrgModalSuccess(`Organization launched! Address: ${orgAddress}`);
       setForm({ name: "", purpose: "" });
       setReloadKey(k => k + 1); // trigger reload
-      setTimeout(() => setSuccess("") , 10000); // Clear after 10 seconds
     } catch (e) {
       setError("Failed to launch organization: " + (e?.info?.error?.message || e.message));
     }
@@ -1586,6 +1630,11 @@ function App() {
 
 
 
+  const handleCloseCreateModal = () => {
+    setCreateOrgModalOpen(false);
+    setCreateOrgModalSuccess("");
+  };
+
   return (
     <div style={styles.container}>
       <div style={{
@@ -1740,7 +1789,7 @@ function App() {
       {/* Create Organization Modal */}
       <CreateOrganizationModal
         open={createOrgModalOpen}
-        onClose={() => setCreateOrgModalOpen(false)}
+        onClose={handleCloseCreateModal}
         account={account}
         connecting={connecting}
         connectWallet={connectWallet}
@@ -1754,6 +1803,7 @@ function App() {
         createOrgTooltipVisible={createOrgTooltipVisible}
         showCreateOrgTooltip={showCreateOrgTooltip}
         hideCreateOrgTooltipImmediately={hideCreateOrgTooltipImmediately}
+        modalSuccess={createOrgModalSuccess}
       />
       <div style={styles.section}>
         <div style={{ display: 'flex', alignItems: 'center', minHeight: 24, justifyContent: 'space-between', marginBottom: 20, marginTop: 8, position: 'relative' }}>
@@ -1989,7 +2039,7 @@ function App() {
       {/* Create Organization Modal */}
       <CreateOrganizationModal
         open={createOrgModalOpen}
-        onClose={() => setCreateOrgModalOpen(false)}
+        onClose={handleCloseCreateModal}
         account={account}
         connecting={connecting}
         connectWallet={connectWallet}
@@ -2003,6 +2053,7 @@ function App() {
         createOrgTooltipVisible={createOrgTooltipVisible}
         showCreateOrgTooltip={showCreateOrgTooltip}
         hideCreateOrgTooltipImmediately={hideCreateOrgTooltipImmediately}
+        modalSuccess={createOrgModalSuccess}
       />
     </div>
   );
