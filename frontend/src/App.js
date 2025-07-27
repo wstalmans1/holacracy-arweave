@@ -4,6 +4,7 @@ import factoryArtifact from "./abis/HolacracyFactory.json";
 import orgArtifact from "./abis/Organization.json";
 import TransactionPendingOverlay from './TransactionPendingOverlay';
 import LaunchOrganizationModal from './LaunchOrganizationModal';
+import ConstitutionSigningModal from './ConstitutionSigningModal';
 import addresses from './contractAddresses.json';
 import ReactDOM from 'react-dom';
 
@@ -398,6 +399,7 @@ function App() {
   const [success, setSuccess] = useState("");
   const [form, setForm] = useState({ name: "", purpose: "" });
   const [txPending, setTxPending] = useState(false);
+  const [txType, setTxType] = useState(""); // Track transaction type
   const [connecting, setConnecting] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const [launchModal, setLaunchModal] = useState({ open: false, initiative: null, partners: [] });
@@ -414,10 +416,10 @@ function App() {
   const holacracyTopInfoAnchor = React.useRef();
   const dappTopInfoAnchor = React.useRef();
   const [participateInfoExpanded, setParticipateInfoExpanded] = useState(false);
-  const [participateSectionExpanded, setParticipateSectionExpanded] = useState(false);
   const [selectedOrg, setSelectedOrg] = useState(null);
   const [orgDetailsOverlayOpen, setOrgDetailsOverlayOpen] = useState(false);
   const [expanded, setExpanded] = useState({}); // For create organization card
+  const [constitutionSigningModal, setConstitutionSigningModal] = useState({ open: false, org: null });
 
   useEffect(() => {
     async function fetchEnsAndBalanceAndNetwork() {
@@ -551,6 +553,7 @@ function App() {
     setError("");
     setSuccess("");
     setTxPending(true);
+    setTxType("create");
     try {
       const tx = await factory.createAndLaunchOrganization(form.name, form.purpose);
       const receipt = await tx.wait();
@@ -575,6 +578,7 @@ function App() {
       setError("Failed to launch organization: " + (e?.info?.error?.message || e.message));
     }
     setTxPending(false);
+    setTxType("");
   };
 
 
@@ -641,13 +645,44 @@ function App() {
   // Helper to check if any transaction is pending
   const anyTxPending = txPending;
 
+  // Enhanced constitution signing function
+  const handleEnhancedConstitutionSigning = async (signature) => {
+    setTxPending(true);
+    setTxType("sign");
+    try {
+      // Get the organization contract with proper signer
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const orgContract = new ethers.Contract(signature.payload.organizationAddress, getAbiArray(orgArtifact), signer);
+      
+      // Call the enhanced signing function
+      const tx = await orgContract.signConstitutionWithDocument(
+        signature.payload.documentHash,
+        signature.signatureHash,
+        signature.payload.constitutionVersion,
+        signature.payload.consentStatement
+      );
+      await tx.wait();
+      
+      // Refresh the organization data
+      loadOrgs();
+      
+      console.log('Constitution signed successfully with enhanced legal validity');
+    } catch (error) {
+      console.error('Error signing constitution:', error);
+      throw error;
+    } finally {
+      setTxPending(false);
+      setTxType("");
+    }
+  };
+
 
 
   // OrganizationActions component - dropdown menu for all organization interactions
   function OrganizationActions({ org, onUpdate }) {
     const [isOpen, setIsOpen] = useState(false);
     const [activeTab, setActiveTab] = useState(null);
-    const [signingPending, setSigningPending] = useState(false);
     const dropdownRef = useRef(null);
 
     // Close dropdown when clicking outside
@@ -718,14 +753,11 @@ function App() {
                               padding: '10px 16px',
                               fontSize: 14,
                               fontWeight: 600,
-                              cursor: signingPending ? 'not-allowed' : 'pointer',
-                              width: '100%',
-                              opacity: signingPending ? 0.7 : 1
+                              cursor: 'pointer',
+                              width: '100%'
                             }}
-                            disabled={signingPending}
-                            onClick={async (e) => {
+                            onClick={(e) => {
                               e.preventDefault();
-                              if (signingPending) return;
                               
                               // Check if wallet is connected
                               if (!account) {
@@ -733,36 +765,13 @@ function App() {
                                 return;
                               }
                               
-                              setSigningPending(true);
-                              try {
-                                // Get the organization contract with proper signer
-                                const provider = new ethers.BrowserProvider(window.ethereum);
-                                const signer = await provider.getSigner();
-                                const orgContract = new ethers.Contract(org.address, getAbiArray(orgArtifact), signer);
-                                
-                                // Call the signConstitution function
-                                const tx = await orgContract.signConstitution();
-                                await tx.wait();
-                                
-                                // Refresh the organization data
-                                onUpdate();
-                                
-                                // Close the dropdown after successful signing
-                                setIsOpen(false);
-                                setActiveTab(null);
-                              } catch (error) {
-                                console.error('Error signing constitution:', error);
-                                if (error?.reason) {
-                                  alert(`Failed to join: ${error.reason}`);
-                                } else {
-                                  alert('Failed to join as partner. Please try again.');
-                                }
-                              } finally {
-                                setSigningPending(false);
-                              }
+                              // Open constitution signing modal
+                              setConstitutionSigningModal({ open: true, org: org });
+                              setIsOpen(false);
+                              setActiveTab(null);
                             }}
                           >
-                            {signingPending ? 'Signing Constitution...' : 'Sign the Constitution to Join as a Partner'}
+                            Sign the Constitution to Join as a Partner
                           </button>
                         </div>
                       )}
@@ -846,7 +855,7 @@ function App() {
                       
                       {/* Transaction Pending Overlay */}
                       <TransactionPendingOverlay 
-                        open={signingPending} 
+                        open={txPending} 
                         message="Signing Constitution..." 
                       />
                     </div>
@@ -1192,14 +1201,6 @@ function App() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', minHeight: 24, justifyContent: 'flex-start', marginBottom: 20, marginTop: 32, position: 'relative', gap: 6 }}>
-          <button
-            onClick={() => setParticipateSectionExpanded(e => !e)}
-            style={{ background: 'none', border: 'none', color: '#232946', cursor: 'pointer', outline: 'none', display: 'flex', alignItems: 'center', margin: 0, padding: 0, lineHeight: 1, minHeight: 22 }}
-            aria-expanded={participateSectionExpanded}
-            title={participateSectionExpanded ? 'Collapse section' : 'Expand section'}
-          >
-            <span style={{ display: 'flex', alignItems: 'center', fontSize: 16, color: '#4ecdc4' }}>{participateSectionExpanded ? '▼' : '▶'}</span>
-          </button>
           <span style={{ color: '#232946', fontSize: 22, fontWeight: 700, display: 'flex', alignItems: 'center', height: 22 }}>Holacracy Organizations</span>
           <button
             onClick={() => setParticipateInfoExpanded(e => !e)}
@@ -1215,41 +1216,37 @@ function App() {
             Once an organization is launched, you can participate as a founder or join as a partner. Founders are those who signed the Constitution and were assigned initial roles at launch. Partners can join later by signing the Constitution and taking on roles as the organization evolves. Participation means you operate under the Holacracy Constitution, with clear roles, accountabilities, and the ability to propose changes through governance.
           </div>
         )}
-        {participateSectionExpanded && (
-          <>
-            {/* Organizations List */}
-            {orgs.length === 0 ? <div style={{ color: '#888', marginTop: 8 }}>No organizations deployed yet.</div> : (
-              orgs.map((org, idx) => (
-                <div key={org.id} style={styles.initiativeCard}>
-                  <div
-                    style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', padding: '4px 0' }}
-                    onClick={() => {
-                      setSelectedOrg(org);
-                      setOrgDetailsOverlayOpen(true);
-                    }}
-                  >
-                                          <div style={{ flex: 1, minWidth: 0, paddingLeft: 12 }}>
-                        <div style={{ fontSize: 14, color: '#232946', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          <span style={{ fontWeight: 600 }}>{org.onChainDetails ? org.onChainDetails.name : org.name}</span>
-                          <span style={{ color: '#888', margin: '0 8px' }}>—</span>
-                          <span style={{ color: '#4a5568' }}>{org.onChainDetails ? org.onChainDetails.purpose : org.purpose}</span>
-                        </div>
-                      </div>
-                    <div style={{ 
-                      fontSize: 12, 
-                      color: '#4ecdc4', 
-                      marginLeft: 8,
-                      display: 'flex',
-                      alignItems: 'center'
-                    }}>
-                      <span style={{ marginRight: 4 }}>View Details</span>
-                      <span>▶</span>
-                    </div>
+        {/* Organizations List - Always Visible */}
+        {orgs.length === 0 ? <div style={{ color: '#888', marginTop: 8 }}>No organizations deployed yet.</div> : (
+          orgs.map((org, idx) => (
+            <div key={org.id} style={styles.initiativeCard}>
+              <div
+                style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', padding: '4px 0' }}
+                onClick={() => {
+                  setSelectedOrg(org);
+                  setOrgDetailsOverlayOpen(true);
+                }}
+              >
+                <div style={{ flex: 1, minWidth: 0, paddingLeft: 12 }}>
+                  <div style={{ fontSize: 14, color: '#232946', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <span style={{ fontWeight: 600 }}>{org.onChainDetails ? org.onChainDetails.name : org.name}</span>
+                    <span style={{ color: '#888', margin: '0 8px' }}>—</span>
+                    <span style={{ color: '#4a5568' }}>{org.onChainDetails ? org.onChainDetails.purpose : org.purpose}</span>
                   </div>
                 </div>
-              ))
-            )}
-          </>
+                <div style={{ 
+                  fontSize: 12, 
+                  color: '#4ecdc4', 
+                  marginLeft: 8,
+                  display: 'flex',
+                  alignItems: 'center'
+                }}>
+                  <span style={{ marginRight: 4 }}>View Details</span>
+                  <span>▶</span>
+                </div>
+              </div>
+            </div>
+          ))
         )}
       </div>
       {/* The test section for setUpgradeTestMessage has been removed */}
@@ -1270,10 +1267,27 @@ function App() {
         OrganizationActionsComponent={OrganizationActions}
       />
       
+      {/* Constitution Signing Modal */}
+      <ConstitutionSigningModal
+        org={constitutionSigningModal.org}
+        open={constitutionSigningModal.open}
+        onClose={() => setConstitutionSigningModal({ open: false, org: null })}
+        onSign={handleEnhancedConstitutionSigning}
+        account={account}
+        signingPending={txPending}
+        setSigningPending={setTxPending}
+      />
+      
       {/* Overlay for pending blockchain transaction */}
       <TransactionPendingOverlay
         open={anyTxPending}
-        message="Creating and deploying your Holacracy organization on the blockchain..."
+        message={
+          txType === "create" 
+            ? "Creating and deploying your Holacracy organization on the blockchain..." 
+            : txType === "sign"
+            ? "Processing your constitution signature on the blockchain..."
+            : "Processing your transaction on the blockchain..."
+        }
       />
     </div>
   );

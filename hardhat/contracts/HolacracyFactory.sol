@@ -42,8 +42,7 @@ contract HolacracyFactory is Initializable, OwnableUpgradeable {
         bytes memory initDataWithNameAndPurpose = abi.encodeWithSelector(
             Organization.initialize.selector,
             name,
-            purpose,
-            msg.sender
+            purpose
         );
         
         org = address(new BeaconProxy(organizationBeacon, initDataWithNameAndPurpose));

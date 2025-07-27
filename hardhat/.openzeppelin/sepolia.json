@@ -10,6 +10,11 @@
       "address": "0xFff00fe5771f55600016A5e3A37156647DCaF0Dd",
       "txHash": "0x2c46ce13e2d1cc2f674d88b6f3b0f42d2b15d2d42a6b142f38ed8ba894018a22",
       "kind": "transparent"
+    },
+    {
+      "address": "0xb80f8feC9718724B5C52549Fa996a8A9Ecd55FfB",
+      "txHash": "0xaec4b9a1ba3dd7d8b68eade11440d20ef6f1dde2741641e6ed231ffcd9536309",
+      "kind": "transparent"
     }
   ],
   "impls": {
@@ -732,6 +737,143 @@
     "2ca98e026c5aa56a6a51229468697303a47958b55a007d68e6c844a427c37571": {
       "address": "0x5544EC8d4aB3ee3e96Ca76c01259b01670Cf86f3",
       "txHash": "0x459d0cff951e66d57ffb840bcf55a1ae95793433f4c1fec5c8ef889979900b69",
+      "layout": {
+        "solcVersion": "0.8.29",
+        "storage": [
+          {
+            "label": "organizationList",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_array(t_struct(OrganizationMetadata)1352_storage)dyn_storage",
+            "contract": "HolacracyFactory",
+            "src": "contracts/HolacracyFactory.sol:22"
+          },
+          {
+            "label": "organizationBeacon",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "HolacracyFactory",
+            "src": "contracts/HolacracyFactory.sol:23"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)86_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(OwnableStorage)14_storage": {
+            "label": "struct OwnableUpgradeable.OwnableStorage",
+            "members": [
+              {
+                "label": "_owner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_array(t_struct(OrganizationMetadata)1352_storage)dyn_storage": {
+            "label": "struct HolacracyFactory.OrganizationMetadata[]",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_struct(OrganizationMetadata)1352_storage": {
+            "label": "struct HolacracyFactory.OrganizationMetadata",
+            "members": [
+              {
+                "label": "name",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "purpose",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "creator",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "orgAddress",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "3"
+              }
+            ],
+            "numberOfBytes": "128"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Ownable": [
+            {
+              "contract": "OwnableUpgradeable",
+              "label": "_owner",
+              "type": "t_address",
+              "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:24",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "a1a92aa426bdafacb375de92e1082b571ee928bc2159402500adefaf44701a76": {
+      "address": "0xF1DbF7D8CB380C391C3ef29a67561e4f4Af4A5df",
+      "txHash": "0x77af9f4c23e4d48bb91f6ab8269aa4b73675d8b2b9df28a83ef8c5f2831d3035",
       "layout": {
         "solcVersion": "0.8.29",
         "storage": [

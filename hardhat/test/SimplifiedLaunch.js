@@ -48,15 +48,14 @@ describe("Simplified Organization Launch", function () {
       const partners = await org.getPartners();
       expect(partners.length).to.equal(0);
 
-      // Verify initiative was created and marked as launched
-      const [initName, initPurpose, initCreator, initPartners, initLaunched, initOrgAddress] = 
-        await factory.getInitiative(0);
+      // Verify organization metadata was created
+      const [metadataName, metadataPurpose, metadataCreator, metadataOrgAddress] = 
+        await factory.getOrganizationMetadata(0);
       
-      expect(initName).to.equal(name);
-      expect(initPurpose).to.equal(purpose);
-      expect(initCreator).to.equal(addr1.address);
-      expect(initLaunched).to.be.true;
-      expect(initOrgAddress).to.equal(orgAddress);
+      expect(metadataName).to.equal(name);
+      expect(metadataPurpose).to.equal(purpose);
+      expect(metadataCreator).to.equal(addr1.address);
+      expect(metadataOrgAddress).to.equal(orgAddress);
     });
 
     it("Should emit correct events", async function () {
@@ -64,7 +63,7 @@ describe("Simplified Organization Launch", function () {
       const purpose = "To test events";
 
       await expect(factory.connect(addr1).createAndLaunchOrganization(name, purpose))
-        .to.emit(factory, "InitiativeCreated")
+        .to.emit(factory, "OrganizationMetadataCreated")
         .and.to.emit(factory, "OrganizationDeployed");
     });
 
@@ -82,8 +81,17 @@ describe("Simplified Organization Launch", function () {
       const org = await ethers.getContractAt("Organization", orgAddress);
 
       // Creator should be able to sign constitution
-      await expect(org.connect(addr1).signConstitution())
-        .to.not.be.reverted;
+      const documentHash = ethers.keccak256(ethers.toUtf8Bytes("test-document"));
+      const signatureHash = ethers.keccak256(ethers.toUtf8Bytes("test-signature"));
+      const constitutionVersion = "5.0";
+      const consentStatement = "I agree to the constitution";
+
+      await expect(org.connect(addr1).signConstitutionWithDocument(
+        documentHash,
+        signatureHash,
+        constitutionVersion,
+        consentStatement
+      )).to.not.be.reverted;
 
       // Verify creator is now a partner
       const partners = await org.getPartners();
@@ -104,8 +112,17 @@ describe("Simplified Organization Launch", function () {
       const org = await ethers.getContractAt("Organization", orgAddress);
 
       // Others should be able to sign constitution
-      await expect(org.connect(addr2).signConstitution())
-        .to.not.be.reverted;
+      const documentHash = ethers.keccak256(ethers.toUtf8Bytes("test-document"));
+      const signatureHash = ethers.keccak256(ethers.toUtf8Bytes("test-signature"));
+      const constitutionVersion = "5.0";
+      const consentStatement = "I agree to the constitution";
+
+      await expect(org.connect(addr2).signConstitutionWithDocument(
+        documentHash,
+        signatureHash,
+        constitutionVersion,
+        consentStatement
+      )).to.not.be.reverted;
 
       // Verify they are now partners
       const partners = await org.getPartners();
