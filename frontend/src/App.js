@@ -502,7 +502,6 @@ function App() {
   const [constitutionSigningModal, setConstitutionSigningModal] = useState({ open: false, org: null });
   const [createOrgTooltipVisible, setCreateOrgTooltipVisible] = useState(false);
   const createOrgTooltipTimer = React.useRef();
-  const createOrgTooltipAnchor = React.useRef();
   const nameInputRef = React.useRef();
   const purposeInputRef = React.useRef();
   const createOrgNameInputRef = React.useRef();
@@ -581,15 +580,6 @@ function App() {
       createOrgTooltipTimer.current = null;
     }
     setCreateOrgTooltipVisible(true);
-  };
-
-  const hideCreateOrgTooltip = () => {
-    if (createOrgTooltipTimer.current) {
-      clearTimeout(createOrgTooltipTimer.current);
-    }
-    createOrgTooltipTimer.current = setTimeout(() => {
-      setCreateOrgTooltipVisible(false);
-    }, 3000);
   };
 
   const hideCreateOrgTooltipImmediately = () => {
