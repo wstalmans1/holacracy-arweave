@@ -468,6 +468,224 @@ function OrganizationDetailsOverlay({ org, open, onClose, account, loadOrgs, Org
   );
 }
 
+// Create Organization Modal Component
+function CreateOrganizationModal({ open, onClose, account, connecting, connectWallet, form, handleInput, createInitiative, txPending, error, success, createOrgNameInputRef, createOrgTooltipVisible, showCreateOrgTooltip, hideCreateOrgTooltipImmediately }) {
+  if (!open) return null;
+  
+  return ReactDOM.createPortal(
+    <div 
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000,
+        padding: '20px'
+      }}
+      onClick={onClose}
+    >
+      <div 
+        style={{
+          background: '#fff',
+          borderRadius: 12,
+          padding: '32px',
+          maxWidth: '500px',
+          width: '100%',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          position: 'relative'
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: '16px',
+            right: '16px',
+            background: 'none',
+            border: 'none',
+            fontSize: '24px',
+            cursor: 'pointer',
+            color: '#888',
+            padding: '4px',
+            borderRadius: '4px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '32px',
+            height: '32px'
+          }}
+        >
+          ×
+        </button>
+
+        {/* Header */}
+        <h2 style={{ 
+          margin: '0 0 24px 0', 
+          fontSize: '24px', 
+          fontWeight: '700', 
+          color: '#232946',
+          textAlign: 'center'
+        }}>
+          Create New Organization
+        </h2>
+
+        {/* Content */}
+        {!account ? (
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ color: '#666', marginBottom: '20px' }}>
+              Connect your wallet to create a new Holacracy organization
+            </p>
+            <button 
+              style={{
+                background: '#4ecdc4',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '12px 24px',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                width: '100%'
+              }} 
+              onClick={connectWallet} 
+              disabled={connecting}
+            >
+              {connecting ? 'Connecting...' : 'Connect Wallet'}
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={createInitiative}>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '8px', 
+                fontWeight: '600', 
+                color: '#232946',
+                fontSize: '14px'
+              }}>
+                Organization Name
+              </label>
+              <input 
+                ref={createOrgNameInputRef}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  fontSize: '16px',
+                  boxSizing: 'border-box'
+                }} 
+                name="name" 
+                value={form.name} 
+                onChange={handleInput} 
+                required 
+                disabled={txPending} 
+                placeholder="e.g., Regen DAO"
+                onMouseEnter={showCreateOrgTooltip}
+                onMouseLeave={hideCreateOrgTooltipImmediately}
+              />
+            </div>
+            
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '8px', 
+                fontWeight: '600', 
+                color: '#232946',
+                fontSize: '14px'
+              }}>
+                Organization Purpose
+              </label>
+              <input 
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  fontSize: '16px',
+                  boxSizing: 'border-box'
+                }} 
+                name="purpose" 
+                value={form.purpose} 
+                onChange={handleInput} 
+                required 
+                disabled={txPending} 
+                placeholder="e.g., To catalyze regenerative collaboration"
+              />
+            </div>
+
+            {error && <div style={{ color: '#e63946', marginBottom: '16px', fontSize: '14px' }}>{error}</div>}
+            {success && <div style={{ color: '#4ecdc4', marginBottom: '16px', fontSize: '14px' }}>{success}</div>}
+            
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button 
+                type="button"
+                onClick={onClose}
+                style={{
+                  flex: 1,
+                  background: '#f3f4f6',
+                  color: '#374151',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  padding: '12px 24px',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+                disabled={txPending}
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit"
+                style={{
+                  flex: 1,
+                  background: '#4ecdc4',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '12px 24px',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }} 
+                disabled={txPending}
+              >
+                {txPending ? 'Creating...' : 'Create Organization'}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* Tooltip for name field */}
+        <OverlayPortal
+          anchorRef={createOrgNameInputRef}
+          visible={createOrgTooltipVisible}
+          style={{
+            ...holacracyInfoboxOverlayStyle,
+            minWidth: '280px',
+            maxWidth: '320px',
+            padding: '12px 16px',
+            fontSize: '13px'
+          }}
+          onMouseEnter={showCreateOrgTooltip}
+          onMouseLeave={hideCreateOrgTooltipImmediately}
+        >
+          Name and purpose can also be changed after the organization is created. Your choices here don't need to be final.
+        </OverlayPortal>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 function App() {
   const [account, setAccount] = useState();
   const [factory, setFactory] = useState();
@@ -498,14 +716,13 @@ function App() {
   const [showArchived, setShowArchived] = useState(false);
   const [selectedOrg, setSelectedOrg] = useState(null);
   const [orgDetailsOverlayOpen, setOrgDetailsOverlayOpen] = useState(false);
-  const [expanded, setExpanded] = useState({}); // For create organization card
   const [constitutionSigningModal, setConstitutionSigningModal] = useState({ open: false, org: null });
   const [createOrgTooltipVisible, setCreateOrgTooltipVisible] = useState(false);
   const createOrgTooltipTimer = React.useRef();
+  const [createOrgModalOpen, setCreateOrgModalOpen] = useState(false);
   const nameInputRef = React.useRef();
   const purposeInputRef = React.useRef();
   const createOrgNameInputRef = React.useRef();
-  const createOrgPurposeInputRef = React.useRef();
 
   useEffect(() => {
     async function fetchEnsAndBalanceAndNetwork() {
@@ -1512,94 +1729,57 @@ function App() {
           }, 3000);
         }}
       />
+
+      {/* Create Organization Modal */}
+      <CreateOrganizationModal
+        open={createOrgModalOpen}
+        onClose={() => setCreateOrgModalOpen(false)}
+        account={account}
+        connecting={connecting}
+        connectWallet={connectWallet}
+        form={form}
+        handleInput={handleInput}
+        createInitiative={createInitiative}
+        txPending={txPending}
+        error={error}
+        success={success}
+        createOrgNameInputRef={createOrgNameInputRef}
+        showCreateOrgTooltip={showCreateOrgTooltip}
+        hideCreateOrgTooltipImmediately={hideCreateOrgTooltipImmediately}
+      />
       <div style={styles.section}>
-        {/* Create Organization Card - Always Visible */}
-        <div style={{ ...styles.initiativeCard, position: 'relative' }}>
-          <div
-            style={{ display: 'flex', alignItems: 'center', marginBottom: expanded['create-org'] ? 2 : 0, cursor: 'pointer', padding: '1px 0' }}
-            onClick={() => setExpanded(prev => ({ ...prev, 'create-org': !prev['create-org'] }))}
+        {/* Create Organization Button */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          marginBottom: '32px',
+          marginTop: '20px'
+        }}>
+          <button
+            onClick={() => setCreateOrgModalOpen(true)}
+            style={{
+              background: '#4ecdc4',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '12px',
+              padding: '16px 32px',
+              fontSize: '18px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(78, 205, 196, 0.3)',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = 'translateY(-2px)';
+              e.target.style.boxShadow = '0 6px 20px rgba(78, 205, 196, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = '0 4px 12px rgba(78, 205, 196, 0.3)';
+            }}
           >
-            <span style={{ fontSize: 12, transition: 'transform 0.2s', transform: expanded['create-org'] ? 'rotate(90deg)' : 'rotate(0deg)', marginRight: 6, color: '#4ecdc4' }}>
-              ▶
-            </span>
-            <div 
-              style={{ 
-                fontWeight: 600, 
-                fontSize: 16, 
-                color: '#232946'
-              }}
-            >
-              Create New Organization
-            </div>
-          </div>
-          {expanded['create-org'] && (
-            <>
-              {!account && (
-                <button style={styles.button} onClick={connectWallet} disabled={connecting}>
-                  {connecting ? 'Connecting...' : 'Connect wallet to create organization'}
-                </button>
-              )}
-              {account && (
-                <form onSubmit={createInitiative}
-                  style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    alignItems: 'flex-end',
-                    columnGap: 28,
-                    rowGap: 8,
-                    paddingLeft: 20,
-                  }}>
-                  <div style={{ flex: 1, minWidth: 220, maxWidth: '45%', marginRight: 8 }}>
-                    <label style={{ ...styles.label, marginTop: 8 }}>
-                      Organization Name
-                    </label>
-                    <input 
-                      ref={createOrgNameInputRef}
-                      style={styles.input} 
-                      name="name" 
-                      value={form.name} 
-                      onChange={handleInput} 
-                      required 
-                      disabled={txPending || !account} 
-                      placeholder="e.g., Regen DAO"
-                      onMouseEnter={showCreateOrgTooltip}
-                      onMouseLeave={hideCreateOrgTooltipImmediately}
-                    />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 260, maxWidth: '45%' }}>
-                    <label style={{ ...styles.label, marginTop: 8 }}>
-                      Organization Purpose
-                    </label>
-                    <input 
-                      ref={createOrgPurposeInputRef}
-                      style={styles.input} 
-                      name="purpose" 
-                      value={form.purpose} 
-                      onChange={handleInput} 
-                      required 
-                      disabled={txPending || !account} 
-                      placeholder="e.g., To catalyze regenerative collaboration"
-                    />
-                  </div>
-                  <div style={{ flex: '0 0 100%', display: 'flex', justifyContent: 'flex-start', minWidth: 220 }}>
-                    <button style={{ ...styles.button, alignSelf: 'center', marginTop: 0 }} type="submit" disabled={txPending || !account}>Create Organization</button>
-                  </div>
-                </form>
-              )}
-              {error && <div style={{ color: '#e63946', marginTop: 8 }}>{error}</div>}
-              {success && <div style={{ color: '#4ecdc4', marginTop: 8 }}>{success}</div>}
-              {txPending && <div style={{ color: '#888', marginTop: 8 }}>Transaction pending...</div>}
-            </>
-          )}
-          <OverlayPortal
-            anchorRef={createOrgNameInputRef}
-            visible={createOrgTooltipVisible}
-            style={holacracyInfoboxOverlayStyle}
-            onMouseEnter={showCreateOrgTooltip}
-            onMouseLeave={hideCreateOrgTooltipImmediately}
-          >
-            Name and purpose can also be changed after the organization is created
-          </OverlayPortal>
+            ➕ Create New Organization
+          </button>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', minHeight: 24, justifyContent: 'space-between', marginBottom: 20, marginTop: 32, position: 'relative' }}>
@@ -1607,7 +1787,7 @@ function App() {
             <span style={{ color: '#232946', fontSize: 22, fontWeight: 700, display: 'flex', alignItems: 'center', height: 22 }}>Holacracy Organizations</span>
             <button
               onClick={() => setParticipateInfoExpanded(e => !e)}
-              style={{ background: 'none', border: 'none', color: '#4ecdc4', fontWeight: 600, fontSize: 16, cursor: 'pointer', textAlign: 'left', outline: 'none', display: 'flex', alignItems: 'center', gap: 8, margin: 0, padding: 0 }}
+              style={{ background: 'none', border: 'none', color: '#4ecdc4', fontWeight: 600, fontSize: 14, cursor: 'pointer', textAlign: 'left', outline: 'none', display: 'flex', alignItems: 'center', gap: 6, margin: 0, padding: 0 }}
               aria-expanded={participateInfoExpanded}
             >
               <span style={{ textAlign: 'left', display: 'block', color: '#4ecdc4' }}>{participateInfoExpanded ? '▼' : '▶'} Info</span>
@@ -1639,8 +1819,37 @@ function App() {
         </div>
         {participateInfoExpanded && (
           <div style={{ marginTop: 4, marginBottom: 16, color: '#888', fontSize: 15, textAlign: 'justify', lineHeight: 1.6, background: '#f7fafd', border: '1px solid #e3eaf2', borderRadius: 10, boxShadow: '0 1px 4px rgba(44,62,80,0.04)', padding: '16px 20px', maxWidth: 700, marginLeft: 'auto', marginRight: 'auto' }}>
-            <b>Participating in a Holacracy Organization:</b><br/>
-            Once an organization is launched, you can participate as a founder or join as a partner. Founders are those who signed the Constitution and were assigned initial roles at launch. Partners can join later by signing the Constitution and taking on roles as the organization evolves. Participation means you operate under the Holacracy Constitution, with clear roles, accountabilities, and the ability to propose changes through governance.
+            <div style={{ marginBottom: '20px' }}>
+              <b style={{ color: '#232946', fontSize: '16px' }}>How This DApp Works:</b><br/><br/>
+              <b>Creating Organizations:</b> Click the "Create New Organization" button above to define a name and purpose. Organizations are deployed as smart contracts on the Sepolia testnet using upgradeable proxy patterns for security and flexibility.<br/><br/>
+              <b>Constitution Signing:</b> Once created, organizations require partners to sign the <a href="https://www.holacracy.org/constitution/5-0/" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>Holacracy Constitution</a> to become active participants. This creates legally binding agreements and establishes governance structures.<br/><br/>
+              <b>Participation:</b> Founders are initial signers who launch the organization. Partners can join later by signing the constitution. All participants operate under clear roles, accountabilities, and governance processes defined by the Holacracy framework.<br/><br/>
+              <b>Organization Management:</b> Creators can update organization details, archive/unarchive organizations, and manage the overall structure. All actions are recorded on the blockchain for transparency and auditability.
+            </div>
+            
+            <div style={{ 
+              padding: '12px', 
+              background: '#f0f9ff', 
+              border: '1px solid #0ea5e9', 
+              borderRadius: '8px',
+              fontSize: '13px',
+              marginBottom: '16px'
+            }}>
+              <b style={{ color: '#0c4a6e' }}>Technical Information:</b><br/>
+              <strong>Network:</strong> Sepolia Testnet | 
+              <strong>Factory:</strong> <a href={`https://sepolia.etherscan.io/address/${addresses.HOLACRACY_FACTORY}`} target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>{addresses.HOLACRACY_FACTORY.slice(0, 8)}...{addresses.HOLACRACY_FACTORY.slice(-6)}</a> | 
+              <strong>Implementation:</strong> <a href={`https://sepolia.etherscan.io/address/${addresses.ORGANIZATION_IMPLEMENTATION}`} target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>{addresses.ORGANIZATION_IMPLEMENTATION.slice(0, 8)}...{addresses.ORGANIZATION_IMPLEMENTATION.slice(-6)}</a>
+            </div>
+            
+            <div style={{ 
+              padding: '12px', 
+              background: '#fef3c7', 
+              border: '1px solid #f59e0b', 
+              borderRadius: '8px',
+              fontSize: '13px'
+            }}>
+              <b style={{ color: '#92400e' }}>Note:</b> This DApp uses upgradeable smart contracts with proxy patterns. All contracts are verified on Etherscan for transparency. Organizations can be archived (soft-deleted) but remain accessible for historical purposes.
+            </div>
           </div>
         )}
         {/* Organizations List - Always Visible */}
@@ -1777,6 +1986,25 @@ function App() {
             ? "Processing your constitution signature on the blockchain..."
             : "Processing your transaction on the blockchain..."
         }
+      />
+
+      {/* Create Organization Modal */}
+      <CreateOrganizationModal
+        open={createOrgModalOpen}
+        onClose={() => setCreateOrgModalOpen(false)}
+        account={account}
+        connecting={connecting}
+        connectWallet={connectWallet}
+        form={form}
+        handleInput={handleInput}
+        createInitiative={createInitiative}
+        txPending={txPending}
+        error={error}
+        success={success}
+        createOrgNameInputRef={createOrgNameInputRef}
+        createOrgTooltipVisible={createOrgTooltipVisible}
+        showCreateOrgTooltip={showCreateOrgTooltip}
+        hideCreateOrgTooltipImmediately={hideCreateOrgTooltipImmediately}
       />
     </div>
   );
