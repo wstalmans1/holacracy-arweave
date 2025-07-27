@@ -49,11 +49,11 @@ const styles = {
   },
   section: {
     maxWidth: 800,
-    margin: '32px auto',
+    margin: '16px auto 32px auto',
     background: '#fff',
     borderRadius: 12,
     boxShadow: '0 2px 12px rgba(44,62,80,0.07)',
-    padding: 32,
+    padding: '32px 32px 32px 32px',
   },
   label: {
     fontWeight: 600,
@@ -1756,41 +1756,7 @@ function App() {
         hideCreateOrgTooltipImmediately={hideCreateOrgTooltipImmediately}
       />
       <div style={styles.section}>
-        {/* Create Organization Button */}
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          marginBottom: '32px',
-          marginTop: '8px'
-        }}>
-          <button
-            onClick={() => setCreateOrgModalOpen(true)}
-            style={{
-              background: '#4ecdc4',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '10px',
-              padding: '12px 24px',
-              fontSize: '16px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              boxShadow: '0 4px 12px rgba(78, 205, 196, 0.3)',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.transform = 'translateY(-2px)';
-              e.target.style.boxShadow = '0 6px 20px rgba(78, 205, 196, 0.4)';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.transform = 'translateY(0)';
-              e.target.style.boxShadow = '0 4px 12px rgba(78, 205, 196, 0.3)';
-            }}
-          >
-            ➕ Create New Organization
-          </button>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', minHeight: 24, justifyContent: 'space-between', marginBottom: 20, marginTop: 28, position: 'relative' }}>
+        <div style={{ display: 'flex', alignItems: 'center', minHeight: 24, justifyContent: 'space-between', marginBottom: 20, marginTop: 8, position: 'relative' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ color: '#232946', fontSize: 22, fontWeight: 700, display: 'flex', alignItems: 'center', height: 22 }}>Holacracy Organizations</span>
             <button
@@ -1829,7 +1795,7 @@ function App() {
           <div style={{ marginTop: 4, marginBottom: 16, color: '#888', fontSize: 15, textAlign: 'justify', lineHeight: 1.6, background: '#f7fafd', border: '1px solid #e3eaf2', borderRadius: 10, boxShadow: '0 1px 4px rgba(44,62,80,0.04)', padding: '16px 20px', maxWidth: 700, marginLeft: 'auto', marginRight: 'auto' }}>
             <div style={{ marginBottom: '20px' }}>
               <b style={{ color: '#232946', fontSize: '16px' }}>How This DApp Works:</b><br/><br/>
-              <b>Creating Organizations:</b> Click the "Create New Organization" button above to define a name and purpose. Organizations are deployed as smart contracts on the Sepolia testnet using upgradeable proxy patterns for security and flexibility.<br/><br/>
+              <b>Creating Organizations:</b> Click the "Create New Organization" button below to define a name and purpose. Organizations are deployed as smart contracts on the Sepolia testnet using upgradeable proxy patterns for security and flexibility.<br/><br/>
               <b>Constitution Signing:</b> Once created, organizations require partners to sign the <a href="https://www.holacracy.org/constitution/5-0/" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>Holacracy Constitution</a> to become active participants. This creates legally binding agreements and establishes governance structures.<br/><br/>
               <b>Participation:</b> Founders are initial signers who launch the organization. Partners can join later by signing the constitution. All participants operate under clear roles, accountabilities, and governance processes defined by the Holacracy framework.<br/><br/>
               <b>Organization Management:</b> Creators can update organization details, archive/unarchive organizations, and manage the overall structure. All actions are recorded on the blockchain for transparency and auditability.
@@ -1848,18 +1814,42 @@ function App() {
               <strong>Factory:</strong> <a href={`https://sepolia.etherscan.io/address/${addresses.HOLACRACY_FACTORY}`} target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>{addresses.HOLACRACY_FACTORY.slice(0, 8)}...{addresses.HOLACRACY_FACTORY.slice(-6)}</a> | 
               <strong>Implementation:</strong> <a href={`https://sepolia.etherscan.io/address/${addresses.ORGANIZATION_IMPLEMENTATION}`} target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>{addresses.ORGANIZATION_IMPLEMENTATION.slice(0, 8)}...{addresses.ORGANIZATION_IMPLEMENTATION.slice(-6)}</a>
             </div>
-            
-            <div style={{ 
-              padding: '12px', 
-              background: '#fef3c7', 
-              border: '1px solid #f59e0b', 
-              borderRadius: '8px',
-              fontSize: '13px'
-            }}>
-              <b style={{ color: '#92400e' }}>Note:</b> This DApp uses upgradeable smart contracts with proxy patterns. All contracts are verified on Etherscan for transparency. Organizations can be archived (soft-deleted) but remain accessible for historical purposes.
-            </div>
           </div>
         )}
+        
+        {/* Create Organization Button */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'flex-start', 
+          marginBottom: '32px',
+          marginTop: '16px'
+        }}>
+          <button
+            onClick={() => setCreateOrgModalOpen(true)}
+            style={{
+              background: '#4ecdc4',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '8px 16px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              boxShadow: '0 3px 8px rgba(78, 205, 196, 0.3)',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = 'translateY(-2px)';
+              e.target.style.boxShadow = '0 6px 20px rgba(78, 205, 196, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = '0 4px 12px rgba(78, 205, 196, 0.3)';
+            }}
+          >
+            ➕ Create New Organization
+          </button>
+        </div>
         {/* Organizations List - Always Visible */}
         {orgsLoading ? (
           <div style={{ 
