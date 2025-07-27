@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import TransactionPendingOverlay from './TransactionPendingOverlay';
-import factoryAbi from './abis/HolacracyFactory.json';
+import factoryAbi from './abis/HolacracyFactory-optimized.json';
 import addresses from './contractAddresses.json';
 
 // Helper to get ABI array regardless of import style
@@ -41,7 +41,7 @@ function LaunchOrganizationModal({ open, onClose, initiative, partners, onDeploy
     setDeployError('');
     try {
       const { ethers } = await import('ethers');
-      const FACTORY_ADDRESS = addresses.HOLACRACY_FACTORY_PROXY;
+      const FACTORY_ADDRESS = addresses.HOLACRACY_FACTORY;
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
       const factory = new ethers.Contract(FACTORY_ADDRESS, getAbiArray(factoryAbi), signer);

@@ -1,0 +1,13 @@
+{
+  "network": "sepolia",
+  "deployer": "0xD78C12137087D394c0FA49634CAa80D0a1985A8A",
+  "deploymentTime": "2025-07-27T16:52:25.116Z",
+  "contracts": {
+    "organizationImplementation": "0x262e26ba84BCAB04E7Db5B67810f27A2A1FeFE78",
+    "organizationBeacon": "0x2C07595167a3C17fC442ea30dA97b27a296783Fb",
+    "holacracyFactory": "0x8173CB1734d81f7d7dc4fC6Ea6949dE64e5bAF30",
+    "holacracyFactoryProxy": "0x8173CB1734d81f7d7dc4fC6Ea6949dE64e5bAF30",
+    "holacracyFactoryProxyAdmin": "0xed4D193e93C6EbA8F5a3bAB47D9fe1F39a7C20f0",
+    "holacracyFactoryImplementation": "0x7Ef79eF5E5276Ea79573f66542FE759B4dEC166E"
+  }
+}

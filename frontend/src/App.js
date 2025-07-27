@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ethers } from 'ethers';
-import factoryArtifact from "./abis/HolacracyFactory.json";
-import orgArtifact from "./abis/Organization.json";
+import factoryArtifact from "./abis/HolacracyFactory-optimized.json";
+import orgArtifact from "./abis/Organization-optimized.json";
 import TransactionPendingOverlay from './TransactionPendingOverlay';
 import LaunchOrganizationModal from './LaunchOrganizationModal';
 import ConstitutionSigningModal from './ConstitutionSigningModal';
@@ -268,14 +268,38 @@ function OrganizationDetailsOverlay({ org, open, onClose, account, loadOrgs, Org
 
         {/* Organization Header */}
         <div style={{ marginBottom: '24px' }}>
-          <h2 style={{ 
-            margin: '0 0 8px 0', 
-            fontSize: '24px', 
-            fontWeight: '700', 
-            color: '#232946' 
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '12px', 
+            marginBottom: '8px' 
           }}>
-            {org.onChainDetails ? org.onChainDetails.name : org.name}
-          </h2>
+            <h2 style={{ 
+              margin: '0', 
+              fontSize: '24px', 
+              fontWeight: '700', 
+              color: '#232946' 
+            }}>
+              {org.onChainDetails ? org.onChainDetails.name : org.name}
+            </h2>
+            {org.archived && (
+              <span style={{ 
+                background: '#dc2626', 
+                color: '#ffffff', 
+                padding: '4px 10px', 
+                borderRadius: '8px', 
+                fontSize: '12px', 
+                fontWeight: '700', 
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}>
+                ⚠️ Archived
+              </span>
+            )}
+          </div>
           <p style={{ 
             margin: '0', 
             fontSize: '16px', 
@@ -284,10 +308,38 @@ function OrganizationDetailsOverlay({ org, open, onClose, account, loadOrgs, Org
           }}>
             {org.onChainDetails ? org.onChainDetails.purpose : org.purpose}
           </p>
+          {org.archived && (
+            <div style={{
+              background: '#fef2f2',
+              border: '1px solid #fecaca',
+              borderRadius: '8px',
+              padding: '12px',
+              marginTop: '12px',
+              color: '#dc2626',
+              fontSize: '14px',
+              lineHeight: '1.5'
+            }}>
+              <strong>📁 This organization is archived.</strong> Archived organizations cannot accept new constitution signings, but existing partners can still view the organization details and history.
+            </div>
+          )}
         </div>
 
         {/* Organization Actions */}
         <div style={{ marginBottom: '24px' }}>
+          {org.archived && (
+            <div style={{
+              background: '#fef3c7',
+              border: '1px solid #fde68a',
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '16px',
+              color: '#92400e',
+              fontSize: '14px',
+              lineHeight: '1.5'
+            }}>
+              <strong>🔒 Archive Status:</strong> This organization is currently archived. Only the creator can unarchive it. While archived, new partners cannot sign the constitution.
+            </div>
+          )}
           <OrganizationActionsComponent 
             org={org}
             onUpdate={loadOrgs}
@@ -296,6 +348,20 @@ function OrganizationDetailsOverlay({ org, open, onClose, account, loadOrgs, Org
 
         {/* Partners Section */}
         <div style={{ marginBottom: '24px' }}>
+          {org.isOldContract && (
+            <div style={{
+              background: '#fee2e2',
+              border: '1px solid #fecaca',
+              borderRadius: '6px',
+              padding: '12px',
+              marginBottom: '16px',
+              color: '#dc2626',
+              fontSize: '14px',
+              lineHeight: '1.5'
+            }}>
+              <strong>⚠️ Old Contract Version:</strong> This organization was created with an older version of the contract that doesn't support the partners list feature. You may have signed the constitution, but the partners list cannot be displayed.
+            </div>
+          )}
           <h3 style={{ 
             margin: '0 0 12px 0', 
             fontSize: '18px', 
@@ -335,7 +401,7 @@ function OrganizationDetailsOverlay({ org, open, onClose, account, loadOrgs, Org
                     <span style={{ 
                       fontSize: '11px', 
                       color: '#fff',
-                      background: '#232946',
+                      background: '#6b7280',
                       padding: '2px 6px',
                       borderRadius: '4px'
                     }}>
@@ -356,18 +422,30 @@ function OrganizationDetailsOverlay({ org, open, onClose, account, loadOrgs, Org
           border: '1px solid #e3eaf2'
         }}>
           <h3 style={{ 
-            margin: '0 0 12px 0', 
-            fontSize: '16px', 
+            margin: '0 0 8px 0', 
+            fontSize: '13px', 
             fontWeight: '600', 
             color: '#232946' 
           }}>
             Organization Details
           </h3>
-          <div style={{ fontSize: '14px', color: '#4a5568', lineHeight: '1.6' }}>
-            <div style={{ marginBottom: '8px' }}>
-              <strong>Creator:</strong> {org.creator}
+          <div style={{ fontSize: '11px', color: '#6b7280', lineHeight: '1.4' }}>
+            <div style={{ marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <strong>Creator:</strong> 
+              <span>{org.creator}</span>
+              {account && org.creator.toLowerCase() === account.toLowerCase() && (
+                <span style={{ 
+                  fontSize: '9px', 
+                  color: '#fff',
+                  background: '#6b7280',
+                  padding: '1px 4px',
+                  borderRadius: '3px'
+                }}>
+                  You
+                </span>
+              )}
             </div>
-            <div style={{ marginBottom: '8px' }}>
+            <div style={{ marginBottom: '4px' }}>
               <strong>Contract Address:</strong> 
               <a 
                 href={`https://sepolia.etherscan.io/address/${org.address}`} 
@@ -395,6 +473,7 @@ function App() {
   const [factory, setFactory] = useState();
   const [readFactory, setReadFactory] = useState();
   const [orgs, setOrgs] = useState([]);
+  const [orgsLoading, setOrgsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [form, setForm] = useState({ name: "", purpose: "" });
@@ -416,10 +495,18 @@ function App() {
   const holacracyTopInfoAnchor = React.useRef();
   const dappTopInfoAnchor = React.useRef();
   const [participateInfoExpanded, setParticipateInfoExpanded] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
   const [selectedOrg, setSelectedOrg] = useState(null);
   const [orgDetailsOverlayOpen, setOrgDetailsOverlayOpen] = useState(false);
   const [expanded, setExpanded] = useState({}); // For create organization card
   const [constitutionSigningModal, setConstitutionSigningModal] = useState({ open: false, org: null });
+  const [createOrgTooltipVisible, setCreateOrgTooltipVisible] = useState(false);
+  const createOrgTooltipTimer = React.useRef();
+  const createOrgTooltipAnchor = React.useRef();
+  const nameInputRef = React.useRef();
+  const purposeInputRef = React.useRef();
+  const createOrgNameInputRef = React.useRef();
+  const createOrgPurposeInputRef = React.useRef();
 
   useEffect(() => {
     async function fetchEnsAndBalanceAndNetwork() {
@@ -488,12 +575,37 @@ function App() {
     }, 180);
   };
 
+  const showCreateOrgTooltip = () => {
+    if (createOrgTooltipTimer.current) {
+      clearTimeout(createOrgTooltipTimer.current);
+      createOrgTooltipTimer.current = null;
+    }
+    setCreateOrgTooltipVisible(true);
+  };
+
+  const hideCreateOrgTooltip = () => {
+    if (createOrgTooltipTimer.current) {
+      clearTimeout(createOrgTooltipTimer.current);
+    }
+    createOrgTooltipTimer.current = setTimeout(() => {
+      setCreateOrgTooltipVisible(false);
+    }, 3000);
+  };
+
+  const hideCreateOrgTooltipImmediately = () => {
+    if (createOrgTooltipTimer.current) {
+      clearTimeout(createOrgTooltipTimer.current);
+      createOrgTooltipTimer.current = null;
+    }
+    setCreateOrgTooltipVisible(false);
+  };
+
   // Set up a read-only provider and contract for reading initiatives
   useEffect(() => {
     // Use a robust Sepolia RPC endpoint (Infura/Alchemy). Set REACT_APP_SEPOLIA_RPC_URL in your .env file.
     const rpcUrl = process.env.REACT_APP_SEPOLIA_RPC_URL || "https://sepolia.infura.io/v3/YOUR_INFURA_KEY";
     const readProvider = new ethers.JsonRpcProvider(rpcUrl);
-    const readFac = new ethers.Contract(addresses.HOLACRACY_FACTORY_PROXY, getAbiArray(factoryArtifact), readProvider);
+    const readFac = new ethers.Contract(addresses.HOLACRACY_FACTORY, getAbiArray(factoryArtifact), readProvider);
     setReadFactory(readFac);
   }, []);
 
@@ -532,7 +644,7 @@ function App() {
           return;
         }
         const sign = await prov.getSigner();
-        const fac = new ethers.Contract(addresses.HOLACRACY_FACTORY_PROXY, getAbiArray(factoryArtifact), sign);
+        const fac = new ethers.Contract(addresses.HOLACRACY_FACTORY, getAbiArray(factoryArtifact), sign);
         setFactory(fac);
       } else {
         setError("MetaMask not detected. Please install MetaMask.");
@@ -583,51 +695,86 @@ function App() {
 
 
 
-  // Load organizations (launched initiatives)
+  // Load organizations (launched initiatives) - OPTIMIZED VERSION
   const loadOrgs = useCallback(async () => {
     const contract = factory || readFactory;
     if (!contract) return;
     setError("");
+    setOrgsLoading(true);
     try {
       const count = await contract.getOrganizationListCount();
-      const arr = [];
+      
+      // Step 1: Get all organization metadata in parallel
+      const metadataPromises = [];
       for (let i = 0; i < count; i++) {
-                const [name, purpose, creator, orgAddress] = await contract.getOrganizationMetadata(i);
-        // Load on-chain organization details and current partners
-        let onChainDetails = null;
-        let currentPartners = [];
-        if (orgAddress && orgAddress !== ethers.ZeroAddress) {
-          try {
-            const runner = contract.runner;
-            const orgContract = new ethers.Contract(orgAddress, getAbiArray(orgArtifact), runner);
-            const [orgName, orgPurpose, orgPartners] = await Promise.all([
-              orgContract.name(),
-              orgContract.purpose(),
-              orgContract.getPartners()
-            ]);
-            onChainDetails = { name: orgName, purpose: orgPurpose };
-            currentPartners = orgPartners; // use current partners from organization contract
-          } catch (e) {
-            // If we can't load from organization contract, skip this organization
-            console.warn(`Could not load organization data for ${orgAddress}:`, e.message);
-            continue; // Skip this organization entirely
-          }
-        } else {
-          // If no organization address, skip this organization
-          console.warn(`No organization address found for metadata ${i}`);
-          continue; // Skip this organization entirely
+        metadataPromises.push(contract.getOrganizationMetadata(i));
+      }
+      const allMetadata = await Promise.all(metadataPromises);
+      
+      // Step 2: Process all organizations in parallel
+      const orgPromises = allMetadata.map(async ([name, purpose, creator, orgAddress], index) => {
+        // Skip invalid addresses
+        if (!orgAddress || orgAddress === ethers.ZeroAddress) {
+          console.warn(`No organization address found for metadata ${index}`);
+          return null;
         }
         
-        arr.push({
-          id: i,
-          name,
-          purpose,
-          partners: currentPartners, // ONLY from organization contract
-          creator,
-          address: orgAddress,
-          onChainDetails
-        });
-      }
+        try {
+          const runner = contract.runner;
+          const orgContract = new ethers.Contract(orgAddress, getAbiArray(orgArtifact), runner);
+          
+          // Get all organization data in parallel
+          const [orgName, orgPurpose, archived] = await Promise.all([
+            orgContract.name(),
+            orgContract.purpose(),
+            orgContract.archived()
+          ]);
+          
+          // Try to get partners list - handle old contracts that might not have this function
+          let currentPartners = [];
+          try {
+            currentPartners = await orgContract.getPartners();
+          } catch (error) {
+            // If getPartners doesn't exist, try getConstitutionSigners
+            try {
+              currentPartners = await orgContract.getConstitutionSigners();
+            } catch (error2) {
+              // If neither function exists, this is an old contract
+              console.warn(`Old contract detected for ${orgAddress}: ${error2.message}`);
+              // For old contracts, we'll use an empty array and show a note
+              currentPartners = [];
+            }
+          }
+          
+          const orgData = {
+            id: index,
+            name,
+            purpose,
+            partners: currentPartners,
+            creator,
+            address: orgAddress,
+            onChainDetails: { name: orgName, purpose: orgPurpose },
+            archived: archived,
+            isOldContract: currentPartners.length === 0 && orgAddress === "0xdb0A7b0966626074F89822307d65382198E6b41B"
+          };
+          
+          // Debug logging for archive status
+          if (archived) {
+            console.log(`🔍 Organization ${orgName} (${orgAddress}) is archived:`, archived);
+          }
+          
+          return orgData;
+        } catch (e) {
+          // If we can't load from organization contract, skip this organization
+          console.warn(`Could not load organization data for ${orgAddress}:`, e.message);
+          return null;
+        }
+      });
+      
+      // Step 3: Wait for all organizations to load and filter out nulls
+      const orgResults = await Promise.all(orgPromises);
+      const arr = orgResults.filter(org => org !== null);
+      
       setOrgs(arr);
     } catch (e) {
       if (e.message && e.message.toLowerCase().includes('failed to fetch')) {
@@ -635,6 +782,8 @@ function App() {
       } else {
         setError("Failed to load organizations: " + e.message);
       }
+    } finally {
+      setOrgsLoading(false);
     }
   }, [factory, readFactory]);
 
@@ -670,7 +819,24 @@ function App() {
       console.log('Constitution signed successfully with enhanced legal validity');
     } catch (error) {
       console.error('Error signing constitution:', error);
-      throw error;
+      
+      // Provide more specific error messages
+      if (error?.reason) {
+        throw new Error(error.reason);
+      } else if (error?.message) {
+        // Check for specific error messages
+        if (error.message.includes('Cannot sign constitution of archived organization')) {
+          throw new Error('Cannot sign constitution: This organization has been archived. Please contact the organization creator to unarchive it.');
+        } else if (error.message.includes('Already signed constitution')) {
+          throw new Error('You have already signed the constitution for this organization.');
+        } else if (error.message.includes('User rejected')) {
+          throw new Error('Transaction was cancelled.');
+        } else {
+          throw error;
+        }
+      } else {
+        throw error;
+      }
     } finally {
       setTxPending(false);
       setTxType("");
@@ -680,6 +846,182 @@ function App() {
 
 
   // OrganizationActions component - dropdown menu for all organization interactions
+  // ArchiveOrganizationForm component for archive/unarchive functionality
+  function ArchiveOrganizationForm({ orgAddress, orgCreator, onUpdate, account }) {
+    const [pending, setPending] = useState(false);
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
+    const [isArchived, setIsArchived] = useState(false);
+
+    // Check if current user is the creator
+    const isCreator = account && orgCreator && account.toLowerCase() === orgCreator.toLowerCase();
+
+    // Load current archive status
+    useEffect(() => {
+      const loadArchiveStatus = async () => {
+        if (!orgAddress) return;
+        try {
+          const provider = new ethers.BrowserProvider(window.ethereum);
+          const orgContract = new ethers.Contract(orgAddress, getAbiArray(orgArtifact), provider);
+          const archived = await orgContract.archived();
+          setIsArchived(archived);
+        } catch (e) {
+          console.error("Error loading archive status:", e);
+        }
+      };
+      loadArchiveStatus();
+    }, [orgAddress]);
+
+    const handleArchive = async () => {
+      setPending(true);
+      setError("");
+      setSuccess("");
+
+      try {
+        if (!account) {
+          setError("Please connect your wallet first.");
+          setPending(false);
+          return;
+        }
+
+        if (!isCreator) {
+          setError("Only the organization creator can archive this organization.");
+          setPending(false);
+          return;
+        }
+
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        const orgContract = new ethers.Contract(orgAddress, getAbiArray(orgArtifact), signer);
+        
+        const tx = await orgContract.archiveOrganization();
+        await tx.wait();
+        
+        setSuccess("Organization archived successfully!");
+        setIsArchived(true);
+        
+        // Add a small delay to ensure the transaction is processed
+        setTimeout(() => {
+          onUpdate(); // Refresh the parent component
+        }, 1000);
+      } catch (e) {
+        console.error("Archive error:", e);
+        if (e?.info?.error?.message) {
+          setError(e.info.error.message);
+        } else if (e?.reason) {
+          setError(e.reason);
+        } else if (e?.message) {
+          setError(e.message);
+        } else {
+          setError("Unknown error occurred");
+        }
+      }
+      setPending(false);
+    };
+
+    const handleUnarchive = async () => {
+      setPending(true);
+      setError("");
+      setSuccess("");
+
+      try {
+        if (!account) {
+          setError("Please connect your wallet first.");
+          setPending(false);
+          return;
+        }
+
+        if (!isCreator) {
+          setError("Only the organization creator can unarchive this organization.");
+          setPending(false);
+          return;
+        }
+
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        const orgContract = new ethers.Contract(orgAddress, getAbiArray(orgArtifact), signer);
+        
+        const tx = await orgContract.unarchiveOrganization();
+        await tx.wait();
+        
+        setSuccess("Organization unarchived successfully!");
+        setIsArchived(false);
+        
+        // Add a small delay to ensure the transaction is processed
+        setTimeout(() => {
+          onUpdate(); // Refresh the parent component
+        }, 1000);
+      } catch (e) {
+        console.error("Unarchive error:", e);
+        if (e?.info?.error?.message) {
+          setError(e.info.error.message);
+        } else if (e?.reason) {
+          setError(e.reason);
+        } else if (e?.message) {
+          setError(e.message);
+        } else {
+          setError("Unknown error occurred");
+        }
+      }
+      setPending(false);
+    };
+
+    if (!isCreator) {
+      return (
+        <div style={{ textAlign: 'center', color: '#888', padding: '20px 0' }}>
+          <div style={{ fontSize: 16, marginBottom: 8 }}>🔒</div>
+          <div style={{ fontSize: 15, marginBottom: 8 }}>Archive access restricted</div>
+          <div style={{ fontSize: 13, marginTop: 8 }}>
+            Only the organization creator can archive/unarchive this organization
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <>
+        <TransactionPendingOverlay open={pending} message={isArchived ? "Unarchiving organization..." : "Archiving organization..."} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
+          <div style={{ 
+            padding: '16px', 
+            background: isArchived ? '#fef3c7' : '#fee2e2', 
+            border: `1px solid ${isArchived ? '#f59e0b' : '#f87171'}`, 
+            borderRadius: 6,
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: 16, marginBottom: 8 }}>
+              {isArchived ? '📦' : '⚠️'}
+            </div>
+            <div style={{ fontSize: 15, marginBottom: 8, fontWeight: 600 }}>
+              {isArchived ? 'Organization is Archived' : 'Archive Organization'}
+            </div>
+            <div style={{ fontSize: 13, color: '#666' }}>
+              {isArchived 
+                ? 'This organization is currently archived and hidden from the main list. You can unarchive it to make it visible again.'
+                : 'Archiving will hide this organization from the main list. The organization data will be preserved and can be restored later.'
+              }
+            </div>
+          </div>
+          
+          <button 
+            style={{ 
+              ...styles.button, 
+              background: isArchived ? '#4ecdc4' : '#dc2626',
+              opacity: pending ? 0.6 : 1
+            }} 
+            onClick={isArchived ? handleUnarchive : handleArchive}
+            disabled={pending}
+          >
+            {isArchived ? 'Unarchive Organization' : 'Archive Organization'}
+          </button>
+          
+          {error && <div style={{ color: '#e63946', fontSize: 14 }}>{error}</div>}
+          {success && <div style={{ color: '#4ecdc4', fontSize: 14 }}>{success}</div>}
+        </div>
+      </>
+    );
+  }
+
   function OrganizationActions({ org, onUpdate }) {
     const [isOpen, setIsOpen] = useState(false);
     const [activeTab, setActiveTab] = useState(null);
@@ -765,6 +1107,12 @@ function App() {
                                 return;
                               }
                               
+                              // Check if organization is archived (this shouldn't happen but just in case)
+                              if (org.archived) {
+                                alert('Cannot sign constitution: This organization has been archived. Please contact the organization creator to unarchive it.');
+                                return;
+                              }
+                              
                               // Open constitution signing modal
                               setConstitutionSigningModal({ open: true, org: org });
                               setIsOpen(false);
@@ -822,6 +1170,22 @@ function App() {
               >
                 Roles
               </button>
+              <button
+                onClick={() => setActiveTab('archive')}
+                style={{
+                  flex: 1,
+                  padding: '12px 16px',
+                  background: activeTab === 'archive' ? '#4ecdc4' : 'transparent',
+                  color: activeTab === 'archive' ? '#fff' : '#232946',
+                  border: 'none',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                Archive
+              </button>
+
             </div>
 
             {/* Tab Content */}
@@ -844,6 +1208,15 @@ function App() {
                   </div>
                 </div>
               )}
+              {activeTab === 'archive' && (
+                <ArchiveOrganizationForm 
+                  orgAddress={org.address}
+                  orgCreator={org.creator}
+                  onUpdate={onUpdate}
+                  account={account}
+                />
+              )}
+
               {!activeTab && (
                 <div style={{ textAlign: 'center', color: '#888', padding: '20px 0', fontSize: 15 }}>
                   Select an action above to get started
@@ -965,6 +1338,7 @@ function App() {
           <div style={{ width: '100%' }}>
             <label style={styles.label}>Name:</label>
             <input 
+              ref={nameInputRef}
               style={{ ...styles.input, width: '100%', boxSizing: 'border-box' }} 
               value={newName} 
               onChange={e => setNewName(e.target.value)} 
@@ -975,6 +1349,7 @@ function App() {
           <div style={{ width: '100%' }}>
             <label style={styles.label}>Purpose:</label>
             <textarea 
+              ref={purposeInputRef}
               style={{ ...styles.input, width: '100%', boxSizing: 'border-box', minHeight: 60, resize: 'vertical' }} 
               value={newPurpose} 
               onChange={e => setNewPurpose(e.target.value)} 
@@ -995,6 +1370,8 @@ function App() {
       </>
     );
   }
+
+
 
   return (
     <div style={styles.container}>
@@ -1147,7 +1524,7 @@ function App() {
       />
       <div style={styles.section}>
         {/* Create Organization Card - Always Visible */}
-        <div style={styles.initiativeCard}>
+        <div style={{ ...styles.initiativeCard, position: 'relative' }}>
           <div
             style={{ display: 'flex', alignItems: 'center', marginBottom: expanded['create-org'] ? 2 : 0, cursor: 'pointer', padding: '1px 0' }}
             onClick={() => setExpanded(prev => ({ ...prev, 'create-org': !prev['create-org'] }))}
@@ -1155,7 +1532,13 @@ function App() {
             <span style={{ fontSize: 12, transition: 'transform 0.2s', transform: expanded['create-org'] ? 'rotate(90deg)' : 'rotate(0deg)', marginRight: 6, color: '#4ecdc4' }}>
               ▶
             </span>
-            <div style={{ fontWeight: 600, fontSize: 16, color: '#232946' }}>
+            <div 
+              style={{ 
+                fontWeight: 600, 
+                fontSize: 16, 
+                color: '#232946'
+              }}
+            >
               Create New Organization
             </div>
           </div>
@@ -1180,13 +1563,33 @@ function App() {
                     <label style={{ ...styles.label, marginTop: 8 }}>
                       Organization Name
                     </label>
-                    <input style={styles.input} name="name" value={form.name} onChange={handleInput} required disabled={txPending || !account} placeholder="e.g., Regen DAO" />
+                    <input 
+                      ref={createOrgNameInputRef}
+                      style={styles.input} 
+                      name="name" 
+                      value={form.name} 
+                      onChange={handleInput} 
+                      required 
+                      disabled={txPending || !account} 
+                      placeholder="e.g., Regen DAO"
+                      onMouseEnter={showCreateOrgTooltip}
+                      onMouseLeave={hideCreateOrgTooltipImmediately}
+                    />
                   </div>
                   <div style={{ flex: 1, minWidth: 260, maxWidth: '45%' }}>
                     <label style={{ ...styles.label, marginTop: 8 }}>
                       Organization Purpose
                     </label>
-                    <input style={styles.input} name="purpose" value={form.purpose} onChange={handleInput} required disabled={txPending || !account} placeholder="e.g., To catalyze regenerative collaboration" />
+                    <input 
+                      ref={createOrgPurposeInputRef}
+                      style={styles.input} 
+                      name="purpose" 
+                      value={form.purpose} 
+                      onChange={handleInput} 
+                      required 
+                      disabled={txPending || !account} 
+                      placeholder="e.g., To catalyze regenerative collaboration"
+                    />
                   </div>
                   <div style={{ flex: '0 0 100%', display: 'flex', justifyContent: 'flex-start', minWidth: 220 }}>
                     <button style={{ ...styles.button, alignSelf: 'center', marginTop: 0 }} type="submit" disabled={txPending || !account}>Create Organization</button>
@@ -1198,17 +1601,51 @@ function App() {
               {txPending && <div style={{ color: '#888', marginTop: 8 }}>Transaction pending...</div>}
             </>
           )}
+          <OverlayPortal
+            anchorRef={createOrgNameInputRef}
+            visible={createOrgTooltipVisible}
+            style={holacracyInfoboxOverlayStyle}
+            onMouseEnter={showCreateOrgTooltip}
+            onMouseLeave={hideCreateOrgTooltipImmediately}
+          >
+            Name and purpose can also be changed after the organization is created
+          </OverlayPortal>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', minHeight: 24, justifyContent: 'flex-start', marginBottom: 20, marginTop: 32, position: 'relative', gap: 6 }}>
-          <span style={{ color: '#232946', fontSize: 22, fontWeight: 700, display: 'flex', alignItems: 'center', height: 22 }}>Holacracy Organizations</span>
-          <button
-            onClick={() => setParticipateInfoExpanded(e => !e)}
-            style={{ background: 'none', border: 'none', color: '#4ecdc4', fontWeight: 600, fontSize: 16, cursor: 'pointer', textAlign: 'left', outline: 'none', display: 'flex', alignItems: 'center', gap: 8, margin: 0, padding: 0 }}
-            aria-expanded={participateInfoExpanded}
-          >
-            <span style={{ textAlign: 'left', display: 'block', color: '#4ecdc4' }}>{participateInfoExpanded ? '▼' : '▶'} Info</span>
-          </button>
+        <div style={{ display: 'flex', alignItems: 'center', minHeight: 24, justifyContent: 'space-between', marginBottom: 20, marginTop: 32, position: 'relative' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ color: '#232946', fontSize: 22, fontWeight: 700, display: 'flex', alignItems: 'center', height: 22 }}>Holacracy Organizations</span>
+            <button
+              onClick={() => setParticipateInfoExpanded(e => !e)}
+              style={{ background: 'none', border: 'none', color: '#4ecdc4', fontWeight: 600, fontSize: 16, cursor: 'pointer', textAlign: 'left', outline: 'none', display: 'flex', alignItems: 'center', gap: 8, margin: 0, padding: 0 }}
+              aria-expanded={participateInfoExpanded}
+            >
+              <span style={{ textAlign: 'left', display: 'block', color: '#4ecdc4' }}>{participateInfoExpanded ? '▼' : '▶'} Info</span>
+            </button>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <label style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 4, 
+              cursor: 'pointer',
+              fontSize: '12px',
+              color: '#9ca3af',
+              fontWeight: '400'
+            }}>
+              <input
+                type="checkbox"
+                checked={showArchived}
+                onChange={(e) => setShowArchived(e.target.checked)}
+                style={{
+                  width: '12px',
+                  height: '12px',
+                  cursor: 'pointer'
+                }}
+              />
+              Show archived
+            </label>
+          </div>
         </div>
         {participateInfoExpanded && (
           <div style={{ marginTop: 4, marginBottom: 16, color: '#888', fontSize: 15, textAlign: 'justify', lineHeight: 1.6, background: '#f7fafd', border: '1px solid #e3eaf2', borderRadius: 10, boxShadow: '0 1px 4px rgba(44,62,80,0.04)', padding: '16px 20px', maxWidth: 700, marginLeft: 'auto', marginRight: 'auto' }}>
@@ -1217,9 +1654,43 @@ function App() {
           </div>
         )}
         {/* Organizations List - Always Visible */}
-        {orgs.length === 0 ? <div style={{ color: '#888', marginTop: 8 }}>No organizations deployed yet.</div> : (
-          orgs.map((org, idx) => (
-            <div key={org.id} style={styles.initiativeCard}>
+        {orgsLoading ? (
+          <div style={{ 
+            color: '#888', 
+            marginTop: 8, 
+            textAlign: 'center',
+            padding: '20px',
+            fontSize: '14px'
+          }}>
+            <div 
+              className="loading-spinner"
+              style={{ 
+                display: 'inline-block',
+                width: '20px',
+                height: '20px',
+                border: '2px solid #e3eaf2',
+                borderTop: '2px solid #4ecdc4',
+                borderRadius: '50%',
+                marginRight: '8px'
+              }}
+            ></div>
+            Loading organizations...
+          </div>
+        ) : orgs.length === 0 ? (
+          <div style={{ color: '#888', marginTop: 8 }}>No organizations deployed yet.</div>
+        ) : (
+          // Filter organizations based on showArchived checkbox
+          orgs
+            .filter(org => showArchived || !org.archived)
+            .map((org, idx) => (
+            <div key={org.id} style={{
+              ...styles.initiativeCard,
+              ...(org.archived && {
+                background: '#fef2f2',
+                border: '1px solid #fecaca',
+                opacity: 0.8
+              })
+            }}>
               <div
                 style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', padding: '4px 0' }}
                 onClick={() => {
@@ -1230,6 +1701,34 @@ function App() {
                 <div style={{ flex: 1, minWidth: 0, paddingLeft: 12 }}>
                   <div style={{ fontSize: 14, color: '#232946', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     <span style={{ fontWeight: 600 }}>{org.onChainDetails ? org.onChainDetails.name : org.name}</span>
+                    {org.archived && (
+                      <span style={{ 
+                        background: '#dc2626', 
+                        color: '#ffffff', 
+                        padding: '3px 8px', 
+                        borderRadius: '6px', 
+                        fontSize: '12px', 
+                        fontWeight: '700', 
+                        marginLeft: '8px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}>
+                        ⚠️ Archived
+                      </span>
+                    )}
+                    {org.isOldContract && (
+                      <span style={{ 
+                        background: '#fee2e2', 
+                        color: '#dc2626', 
+                        padding: '2px 6px', 
+                        borderRadius: '4px', 
+                        fontSize: '11px', 
+                        fontWeight: '600', 
+                        marginLeft: '8px' 
+                      }}>
+                        OLD CONTRACT
+                      </span>
+                    )}
                     <span style={{ color: '#888', margin: '0 8px' }}>—</span>
                     <span style={{ color: '#4a5568' }}>{org.onChainDetails ? org.onChainDetails.purpose : org.purpose}</span>
                   </div>

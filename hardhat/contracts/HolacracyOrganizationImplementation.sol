@@ -4,16 +4,18 @@ pragma solidity ^0.8.19;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 /**
- * @title Organization
+ * @title HolacracyOrganizationImplementation
  * @notice This contract implements a Holacracy-based organization with legally binding constitution signing
  * @dev This contract allows partners to sign the Holacracy Constitution and participate in organization governance
  * @dev All constitution signatures are legally binding with comprehensive audit trails
  * @dev This contract is deployed via BeaconProxy and can be upgraded through the beacon
  * @dev Governance is based on partnership rather than ownership, following Holacracy principles
  */
-contract Organization is Initializable {
+contract HolacracyOrganizationImplementation is Initializable {
     string public name;
     string public purpose;
+    address public creator;  // Organization creator who can archive/unarchive
+    bool public archived;   // Archive state
     mapping(address => bool) public hasSignedConstitution;
     
     /**
@@ -60,24 +62,60 @@ contract Organization is Initializable {
     /// @param newPurpose The new purpose of the organization
     event NameAndPurposeUpdated(string newName, string newPurpose);
 
+    /// @notice Emitted when the organization is archived
+    /// @param archivedBy The address that archived the organization
+    event OrganizationArchived(address indexed archivedBy);
+    
+    /// @notice Emitted when the organization is unarchived
+    /// @param unarchivedBy The address that unarchived the organization
+    event OrganizationUnarchived(address indexed unarchivedBy);
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
     }
 
     /**
-     * @notice Initializes the organization with its name and purpose
+     * @notice Initializes the organization with its name, purpose, and creator
      * @param _name The name of the organization
      * @param _purpose The purpose that will guide the organization
+     * @param _creator The address of the organization creator
      * @dev This function can only be called once due to the initializer modifier
      * @dev The organization is governed by partners who sign the constitution, not by a single owner
      */
-    function initialize(string memory _name, string memory _purpose) public initializer {
+    function initialize(string memory _name, string memory _purpose, address _creator) public initializer {
         require(bytes(_name).length > 0, "Name cannot be empty");
         require(bytes(_purpose).length > 0, "Purpose cannot be empty");
+        require(_creator != address(0), "Creator cannot be zero address");
         
         name = _name;
         purpose = _purpose;
+        creator = _creator;  // Set the creator to the provided address
+        archived = false;    // Initialize as not archived
+    }
+
+    /**
+     * @notice Archive the organization (only creator can do this)
+     * @dev This is a soft archive - the organization data remains but is marked as archived
+     */
+    function archiveOrganization() external {
+        require(msg.sender == creator, "Only creator can archive organization");
+        require(!archived, "Organization already archived");
+        
+        archived = true;
+        emit OrganizationArchived(msg.sender);
+    }
+
+    /**
+     * @notice Unarchive the organization (only creator can do this)
+     * @dev Restores the organization from archived state
+     */
+    function unarchiveOrganization() external {
+        require(msg.sender == creator, "Only creator can unarchive organization");
+        require(archived, "Organization is not archived");
+        
+        archived = false;
+        emit OrganizationUnarchived(msg.sender);
     }
 
     /**
@@ -96,6 +134,7 @@ contract Organization is Initializable {
         string memory constitutionVersion,
         string memory consentStatement
     ) external {
+        require(!archived, "Cannot sign constitution of archived organization");
         require(!hasSignedConstitution[msg.sender], "Already signed constitution");
         require(bytes(documentHash).length > 0, "Document hash cannot be empty");
         require(bytes(signatureHash).length > 0, "Signature hash cannot be empty");
@@ -141,42 +180,13 @@ contract Organization is Initializable {
     }
 
     /**
-     * @notice Returns detailed signature data for a specific signer
-     * @param signer The address of the signer to query
-     * @return documentHash Hash of the signed constitution document
-     * @return signatureHash Hash of the signature payload
-     * @return timestamp When the signature was created (block timestamp)
-     * @return constitutionVersion Version of constitution that was signed
-     * @return consentStatement The explicit consent statement provided
-     * @return signerAddress The address of the signer
-     * @dev This function provides complete audit trail for legal purposes
-     */
-    function getConstitutionSignature(address signer) external view returns (
-        string memory documentHash,
-        string memory signatureHash,
-        uint256 timestamp,
-        string memory constitutionVersion,
-        string memory consentStatement,
-        address signerAddress
-    ) {
-        ConstitutionSignature memory sig = constitutionSignatures[signer];
-        return (
-            sig.documentHash,
-            sig.signatureHash,
-            sig.timestamp,
-            sig.constitutionVersion,
-            sig.consentStatement,
-            sig.signer
-        );
-    }
-
-    /**
      * @notice Updates the organization's name
      * @param newName The new name for the organization
      * @dev Only partners can update the organization name
      * @dev Name cannot be empty
      */
     function updateName(string memory newName) external {
+        require(!archived, "Cannot update archived organization");
         require(hasSignedConstitution[msg.sender], "Must be a partner to update name");
         require(bytes(newName).length > 0, "Name cannot be empty");
         name = newName;
@@ -190,6 +200,7 @@ contract Organization is Initializable {
      * @dev Purpose cannot be empty
      */
     function updatePurpose(string memory newPurpose) external {
+        require(!archived, "Cannot update archived organization");
         require(hasSignedConstitution[msg.sender], "Must be a partner to update purpose");
         require(bytes(newPurpose).length > 0, "Purpose cannot be empty");
         purpose = newPurpose;
@@ -205,6 +216,7 @@ contract Organization is Initializable {
      * @dev This is more gas efficient than updating name and purpose separately
      */
     function updateNameAndPurpose(string memory newName, string memory newPurpose) external {
+        require(!archived, "Cannot update archived organization");
         require(hasSignedConstitution[msg.sender], "Must be a partner to update details");
         require(bytes(newName).length > 0, "Name cannot be empty");
         require(bytes(newPurpose).length > 0, "Purpose cannot be empty");

@@ -126,6 +126,23 @@ I understand that in a Holacracy, all authority derives from the Constitution, n
       return;
     }
 
+    // Check if organization is archived before attempting to sign
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const orgContract = new ethers.Contract(org.address, [
+        "function archived() view returns (bool)"
+      ], provider);
+      const isArchived = await orgContract.archived();
+      
+      if (isArchived) {
+        alert('Cannot sign constitution: This organization has been archived. Please contact the organization creator to unarchive it.');
+        return;
+      }
+    } catch (error) {
+      console.error('Error checking archive status:', error);
+      // Continue anyway, the contract will handle the error
+    }
+
     // Use the main txPending state instead of local signingPending
     setSigningPending(true);
     try {
@@ -139,7 +156,26 @@ I understand that in a Holacracy, all authority derives from the Constitution, n
       onClose();
     } catch (error) {
       console.error('Error signing constitution:', error);
-      alert('Failed to sign constitution. Please try again.');
+      
+      // Provide more specific error messages
+      let errorMessage = 'Failed to sign constitution. Please try again.';
+      
+      if (error?.reason) {
+        errorMessage = error.reason;
+      } else if (error?.message) {
+        // Check for specific error messages
+        if (error.message.includes('Cannot sign constitution of archived organization')) {
+          errorMessage = 'Cannot sign constitution: This organization has been archived. Please contact the organization creator to unarchive it.';
+        } else if (error.message.includes('Already signed constitution')) {
+          errorMessage = 'You have already signed the constitution for this organization.';
+        } else if (error.message.includes('User rejected')) {
+          errorMessage = 'Transaction was cancelled.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      alert(errorMessage);
     } finally {
       setSigningPending(false);
     }

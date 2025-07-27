@@ -15,6 +15,21 @@
       "address": "0xb80f8feC9718724B5C52549Fa996a8A9Ecd55FfB",
       "txHash": "0xaec4b9a1ba3dd7d8b68eade11440d20ef6f1dde2741641e6ed231ffcd9536309",
       "kind": "transparent"
+    },
+    {
+      "address": "0x0b7b553A4887Ef3fD967b628468Aa9e1Bc617B52",
+      "txHash": "0xf8fd11034b707fab841e277bfc8695fbb419661364c33f5f6c44ce9dbfe46f16",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xEB9E9130753517f63d353A71Cb00AcB0849e219f",
+      "txHash": "0xc088ca1455bdc00ae548947484b09385c2dbd34fc8e596a15698969100fb1ef8",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x8173CB1734d81f7d7dc4fC6Ea6949dE64e5bAF30",
+      "txHash": "0xbb341bfc01b3d280fbf8e23d956e211c36099106cce42529a5f1c4391e110afb",
+      "kind": "transparent"
     }
   ],
   "impls": {
@@ -947,6 +962,280 @@
           },
           "t_struct(OrganizationMetadata)1352_storage": {
             "label": "struct HolacracyFactory.OrganizationMetadata",
+            "members": [
+              {
+                "label": "name",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "purpose",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "creator",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "orgAddress",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "3"
+              }
+            ],
+            "numberOfBytes": "128"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Ownable": [
+            {
+              "contract": "OwnableUpgradeable",
+              "label": "_owner",
+              "type": "t_address",
+              "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:24",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "de7c3a7fe2d9bbdcce63a19b7a470a0f7522302fae83e543995c4d1c9a8a3397": {
+      "address": "0x6830e3bbabD92514723C9d4309A80cc98EA9e295",
+      "txHash": "0xb2e5de6bdcbc74aeaa55bc3b8a92cf81b94113a06ed077ca4086d1f00298e0e7",
+      "layout": {
+        "solcVersion": "0.8.29",
+        "storage": [
+          {
+            "label": "organizationList",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_array(t_struct(OrganizationMetadata)1352_storage)dyn_storage",
+            "contract": "HolacracyOrganizationFactoryImplementation",
+            "src": "contracts/HolacracyOrganizationFactoryImplementation.sol:22"
+          },
+          {
+            "label": "organizationBeacon",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "HolacracyOrganizationFactoryImplementation",
+            "src": "contracts/HolacracyOrganizationFactoryImplementation.sol:23"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)86_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(OwnableStorage)14_storage": {
+            "label": "struct OwnableUpgradeable.OwnableStorage",
+            "members": [
+              {
+                "label": "_owner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_array(t_struct(OrganizationMetadata)1352_storage)dyn_storage": {
+            "label": "struct HolacracyOrganizationFactoryImplementation.OrganizationMetadata[]",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_struct(OrganizationMetadata)1352_storage": {
+            "label": "struct HolacracyOrganizationFactoryImplementation.OrganizationMetadata",
+            "members": [
+              {
+                "label": "name",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "purpose",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "creator",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "orgAddress",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "3"
+              }
+            ],
+            "numberOfBytes": "128"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Ownable": [
+            {
+              "contract": "OwnableUpgradeable",
+              "label": "_owner",
+              "type": "t_address",
+              "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:24",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "be239b03487ee13af9d26514fff11c86ee74eea91347ddbbff8f65db4afbc988": {
+      "address": "0x7Ef79eF5E5276Ea79573f66542FE759B4dEC166E",
+      "txHash": "0x23a0f65294b4d56f42c8e27645f5009772fe956e51941bc7cdb0e9fc61c47099",
+      "layout": {
+        "solcVersion": "0.8.29",
+        "storage": [
+          {
+            "label": "organizationList",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_array(t_struct(OrganizationMetadata)1352_storage)dyn_storage",
+            "contract": "HolacracyOrganizationFactoryImplementation",
+            "src": "contracts/HolacracyOrganizationFactoryImplementation.sol:22"
+          },
+          {
+            "label": "organizationBeacon",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "HolacracyOrganizationFactoryImplementation",
+            "src": "contracts/HolacracyOrganizationFactoryImplementation.sol:23"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)86_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(OwnableStorage)14_storage": {
+            "label": "struct OwnableUpgradeable.OwnableStorage",
+            "members": [
+              {
+                "label": "_owner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_array(t_struct(OrganizationMetadata)1352_storage)dyn_storage": {
+            "label": "struct HolacracyOrganizationFactoryImplementation.OrganizationMetadata[]",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_struct(OrganizationMetadata)1352_storage": {
+            "label": "struct HolacracyOrganizationFactoryImplementation.OrganizationMetadata",
             "members": [
               {
                 "label": "name",

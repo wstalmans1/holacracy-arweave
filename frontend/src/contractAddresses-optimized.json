@@ -1,0 +1,19 @@
+{
+  "network": "sepolia",
+  "deployer": "0xD78C12137087D394c0FA49634CAa80D0a1985A8A",
+  "deploymentTime": "2025-07-27T12:26:48.684Z",
+  "contracts": {
+    "organizationImplementation": "0xFc7667Bc9221FC02D57A2A2cb819831012E7D906",
+    "organizationBeacon": "0x896306968d60c5de90a2F68538d32838EedfCF98",
+    "holacracyFactory": "0x22cf90FF8d123C19785ba204f4225F7bB874E534",
+    "holacracyFactoryProxy": "0xEB9E9130753517f63d353A71Cb00AcB0849e219f",
+    "holacracyFactoryProxyAdmin": "0xfA7E0f7f5183F7381e08bF10f927d5e7642259D7",
+    "holacracyFactoryImplementation": "0x6830e3bbabD92514723C9d4309A80cc98EA9e295"
+  },
+  "upgradeInfo": {
+    "previousOrganizationImplementation": "0xF19c185b768bba6ccEb28E490892Ad74C484AF99",
+    "newOrganizationImplementation": "0xFc7667Bc9221FC02D57A2A2cb819831012E7D906",
+    "upgradeTime": "2025-07-27T13:06:41.667Z",
+    "upgradeReason": "Fixed creator assignment for archive functionality"
+  }
+}
