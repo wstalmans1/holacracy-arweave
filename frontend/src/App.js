@@ -162,7 +162,7 @@ const holacracyInfoboxOverlayStyle = {
 };
 
 // Portal component for overlays with mouse enter/leave support
-function OverlayPortal({ anchorRef, visible, children, style, onMouseEnter, onMouseLeave }) {
+function OverlayPortal({ anchorRef, visible, children, style, onMouseEnter, onMouseLeave, alignRight = false }) {
   const [coords, setCoords] = useState(null);
 
   useEffect(() => {
@@ -172,6 +172,7 @@ function OverlayPortal({ anchorRef, visible, children, style, onMouseEnter, onMo
       const finalCoords = {
         top: rect.top + window.scrollY,
         left: rect.left + window.scrollX,
+        right: rect.right + window.scrollX,
       };
       setCoords(finalCoords);
     }
@@ -191,7 +192,8 @@ function OverlayPortal({ anchorRef, visible, children, style, onMouseEnter, onMo
         ...style,
         position: 'absolute',
         top: coords.top,
-        left: coords.left,
+        left: alignRight ? 'auto' : coords.left,
+        right: alignRight ? window.innerWidth - coords.right : 'auto',
         transform: shouldShowBelow ? 'translateY(20px)' : 'translateY(-100%)',
         zIndex: 9999,
         pointerEvents: 'auto', // Ensure clicks work
@@ -588,6 +590,7 @@ function CreateOrganizationModal({ open, onClose, account, connecting, connectWa
                 required 
                 disabled={txPending} 
                 placeholder="e.g., Regen DAO"
+                autoComplete="off"
                 onMouseEnter={showCreateOrgTooltip}
                 onMouseLeave={hideCreateOrgTooltipImmediately}
               />
@@ -618,6 +621,7 @@ function CreateOrganizationModal({ open, onClose, account, connecting, connectWa
                 required 
                 disabled={txPending} 
                 placeholder="e.g., To catalyze regenerative collaboration"
+                autoComplete="off"
               />
             </div>
 
@@ -680,6 +684,7 @@ function CreateOrganizationModal({ open, onClose, account, connecting, connectWa
         >
           Name and purpose can also be changed after the organization is created. Your choices here don't need to be final.
         </OverlayPortal>
+
       </div>
     </div>,
     document.body
@@ -719,6 +724,7 @@ function App() {
   const [constitutionSigningModal, setConstitutionSigningModal] = useState({ open: false, org: null });
   const [createOrgTooltipVisible, setCreateOrgTooltipVisible] = useState(false);
   const createOrgTooltipTimer = React.useRef();
+
   const [createOrgModalOpen, setCreateOrgModalOpen] = useState(false);
   const nameInputRef = React.useRef();
   const purposeInputRef = React.useRef();
@@ -1633,12 +1639,13 @@ function App() {
                   >
                     DApp
                   </span>
-                  <OverlayPortal
+                                    <OverlayPortal
                     anchorRef={dappTopInfoAnchor}
                     visible={dappTopInfoVisible}
                     style={holacracyInfoboxOverlayStyle}
                     onMouseEnter={showDappTopInfo}
                     onMouseLeave={hideDappTopInfo}
+                    alignRight={true}
                   >
                     A DApp (Decentralized Application) is an application that runs on a blockchain or decentralized network, rather than being hosted on a single centralized server. DApps are open, transparent, and censorship-resistant by design.
                   </OverlayPortal>
@@ -1744,6 +1751,7 @@ function App() {
         error={error}
         success={success}
         createOrgNameInputRef={createOrgNameInputRef}
+        createOrgTooltipVisible={createOrgTooltipVisible}
         showCreateOrgTooltip={showCreateOrgTooltip}
         hideCreateOrgTooltipImmediately={hideCreateOrgTooltipImmediately}
       />
@@ -1753,7 +1761,7 @@ function App() {
           display: 'flex', 
           justifyContent: 'center', 
           marginBottom: '32px',
-          marginTop: '20px'
+          marginTop: '8px'
         }}>
           <button
             onClick={() => setCreateOrgModalOpen(true)}
@@ -1782,7 +1790,7 @@ function App() {
           </button>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', minHeight: 24, justifyContent: 'space-between', marginBottom: 20, marginTop: 32, position: 'relative' }}>
+        <div style={{ display: 'flex', alignItems: 'center', minHeight: 24, justifyContent: 'space-between', marginBottom: 20, marginTop: 28, position: 'relative' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ color: '#232946', fontSize: 22, fontWeight: 700, display: 'flex', alignItems: 'center', height: 22 }}>Holacracy Organizations</span>
             <button
