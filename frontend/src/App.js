@@ -111,7 +111,7 @@ const styles = {
   footer: {
     textAlign: 'center',
     color: '#888',
-    fontSize: 14,
+    fontSize: 12,
     margin: '48px 0 12px 0',
   },
   orgInfo: {
