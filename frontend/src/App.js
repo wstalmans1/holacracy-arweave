@@ -669,7 +669,6 @@ function CreateOrganizationModal({ open, onClose, account, connecting, connectWa
             </div>
 
             {error && <div style={{ color: '#e63946', marginBottom: '16px', fontSize: '14px' }}>{error}</div>}
-            {success && <div style={{ color: '#4ecdc4', marginBottom: '16px', fontSize: '14px' }}>{success}</div>}
             
             <div style={{ display: 'flex', gap: '12px' }}>
               <button 
@@ -734,6 +733,148 @@ function CreateOrganizationModal({ open, onClose, account, connecting, connectWa
   );
 }
 
+// Info Modal Component
+function InfoModal({ open, onClose }) {
+  if (!open) return null;
+  
+  return ReactDOM.createPortal(
+    <div 
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000,
+        padding: '20px'
+      }}
+      onClick={onClose}
+    >
+      <div 
+        style={{
+          background: '#fff',
+          borderRadius: 12,
+          padding: '32px',
+          maxWidth: '700px',
+          width: '100%',
+          maxHeight: '80vh',
+          overflowY: 'auto',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          position: 'relative'
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: '16px',
+            right: '16px',
+            background: 'none',
+            border: 'none',
+            fontSize: '24px',
+            cursor: 'pointer',
+            color: '#888',
+            padding: '4px',
+            borderRadius: '4px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '32px',
+            height: '32px'
+          }}
+        >
+          ×
+        </button>
+
+        {/* Header */}
+        <h2 style={{ 
+          margin: '0 0 24px 0', 
+          fontSize: '24px', 
+          fontWeight: '700', 
+          color: '#232946',
+          textAlign: 'center'
+        }}>
+          How This DApp Works
+        </h2>
+
+        {/* Content */}
+        <div style={{ color: '#888', fontSize: 15, textAlign: 'justify', lineHeight: 1.6 }}>
+          <div style={{ marginBottom: '20px' }}>
+            <b style={{ color: '#232946', fontSize: '16px' }}>How This DApp Works:</b><br/><br/>
+            <b>Creating Organizations:</b> Click the "Create New Organization" button below to define a name and purpose. Organizations are deployed as smart contracts on the Sepolia testnet using upgradeable proxy patterns for security and flexibility.<br/><br/>
+            <b>Constitution Signing:</b> Once created, organizations require partners to sign the <a href="https://www.holacracy.org/constitution/5-0/" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>Holacracy Constitution</a> to become active participants. This creates legally binding agreements and establishes governance structures.<br/><br/>
+            <b>Participation:</b> Founders are initial signers who launch the organization. Partners can join later by signing the constitution. All participants operate under clear roles, accountabilities, and governance processes defined by the Holacracy framework.<br/><br/>
+            <b>Organization Management:</b> Creators can update organization details, archive/unarchive organizations, and manage the overall structure. All actions are recorded on the blockchain for transparency and auditability.
+          </div>
+          
+          <div style={{ 
+            padding: '16px', 
+            background: '#f0f9ff', 
+            border: '1px solid #0ea5e9', 
+            borderRadius: '8px',
+            fontSize: '13px',
+            marginBottom: '16px'
+          }}>
+            <b style={{ color: '#0c4a6e', fontSize: '14px' }}>Smart Contract Architecture:</b><br/><br/>
+            <strong>Network:</strong> Sepolia Testnet<br/><br/>
+            
+            <b style={{ color: '#0c4a6e' }}>Core Contracts:</b><br/>
+            <div style={{ marginBottom: '16px' }}>
+              <strong>Organization Implementation:</strong> <a href={`https://sepolia.etherscan.io/address/${addresses.ORGANIZATION_IMPLEMENTATION}`} target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>{addresses.ORGANIZATION_IMPLEMENTATION.slice(0, 8)}...{addresses.ORGANIZATION_IMPLEMENTATION.slice(-6)}</a><br/>
+              <div style={{ marginLeft: '20px', marginTop: '4px' }}>
+                <em>Contains the core logic for constitution signing, partner management, and organization operations. Shared by all organizations.</em>
+              </div>
+            </div>
+            
+            <div style={{ marginBottom: '16px' }}>
+              <strong>Organization Beacon:</strong> <a href={`https://sepolia.etherscan.io/address/${addresses.ORGANIZATION_BEACON}`} target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>{addresses.ORGANIZATION_BEACON.slice(0, 8)}...{addresses.ORGANIZATION_BEACON.slice(-6)}</a><br/>
+              <div style={{ marginLeft: '20px', marginTop: '4px' }}>
+                <em>Manages the implementation address for all organization contracts. Each organization gets its own beacon proxy contract.</em>
+              </div>
+            </div>
+            
+            <div style={{ marginBottom: '16px' }}>
+              <strong>Factory Proxy:</strong> <a href={`https://sepolia.etherscan.io/address/${addresses.HOLACRACY_FACTORY}`} target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>{addresses.HOLACRACY_FACTORY.slice(0, 8)}...{addresses.HOLACRACY_FACTORY.slice(-6)}</a><br/>
+              <div style={{ marginLeft: '20px', marginTop: '4px' }}>
+                <em>Entry point for creating new organizations. Uses transparent proxy pattern for upgradeability.</em>
+              </div>
+            </div>
+            
+            <div style={{ marginBottom: '16px' }}>
+              <strong>Factory Implementation:</strong> <a href={`https://sepolia.etherscan.io/address/${addresses.HOLACRACY_FACTORY_IMPLEMENTATION}`} target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>{addresses.HOLACRACY_FACTORY_IMPLEMENTATION.slice(0, 8)}...{addresses.HOLACRACY_FACTORY_IMPLEMENTATION.slice(-6)}</a><br/>
+              <div style={{ marginLeft: '20px', marginTop: '4px' }}>
+                <em>Contains the logic for launching organizations and managing their metadata.</em>
+              </div>
+            </div>
+            
+            <div style={{ marginBottom: '16px' }}>
+              <strong>Factory Proxy Admin:</strong> <a href={`https://sepolia.etherscan.io/address/${addresses.HOLACRACY_FACTORY_PROXY_ADMIN}`} target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>{addresses.HOLACRACY_FACTORY_PROXY_ADMIN.slice(0, 8)}...{addresses.HOLACRACY_FACTORY_PROXY_ADMIN.slice(-6)}</a><br/>
+              <div style={{ marginLeft: '20px', marginTop: '4px' }}>
+                <em>Controls factory upgrades and admin functions.</em>
+              </div>
+            </div>
+            
+            <b style={{ color: '#0c4a6e' }}>How It Works:</b><br/>
+            • <strong>Organization Creation:</strong> Factory proxy deploys beacon proxies for each organization<br/>
+            • <strong>Individual Contracts:</strong> Each organization gets its own derived contract (beacon proxy) with unique storage<br/>
+            • <strong>Shared Logic:</strong> All organizations share the same implementation contract but have separate data<br/>
+            • <strong>Upgradeability:</strong> Beacon pattern allows all organizations to be upgraded simultaneously<br/>
+            • <strong>Security:</strong> Transparent proxy pattern separates logic from storage<br/>
+            • <strong>Gas Efficiency:</strong> Beacon proxies minimize deployment costs for new organizations
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 function App() {
   const [account, setAccount] = useState();
   const [factory, setFactory] = useState();
@@ -760,7 +901,7 @@ function App() {
   // Add refs for the anchors
   const holacracyTopInfoAnchor = React.useRef();
   const dappTopInfoAnchor = React.useRef();
-  const [participateInfoExpanded, setParticipateInfoExpanded] = useState(false);
+
   const [showArchived, setShowArchived] = useState(false);
   const [selectedOrg, setSelectedOrg] = useState(null);
   const [orgDetailsOverlayOpen, setOrgDetailsOverlayOpen] = useState(false);
@@ -770,6 +911,7 @@ function App() {
 
   const [createOrgModalOpen, setCreateOrgModalOpen] = useState(false);
   const [createOrgModalSuccess, setCreateOrgModalSuccess] = useState("");
+  const [infoModalOpen, setInfoModalOpen] = useState(false);
   const nameInputRef = React.useRef();
   const purposeInputRef = React.useRef();
   const createOrgNameInputRef = React.useRef();
@@ -1805,16 +1947,21 @@ function App() {
         hideCreateOrgTooltipImmediately={hideCreateOrgTooltipImmediately}
         modalSuccess={createOrgModalSuccess}
       />
+
+      {/* Info Modal */}
+      <InfoModal
+        open={infoModalOpen}
+        onClose={() => setInfoModalOpen(false)}
+      />
       <div style={styles.section}>
         <div style={{ display: 'flex', alignItems: 'center', minHeight: 24, justifyContent: 'space-between', marginBottom: 20, marginTop: 8, position: 'relative' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ color: '#232946', fontSize: 22, fontWeight: 700, display: 'flex', alignItems: 'center', height: 22 }}>Holacracy Organizations</span>
             <button
-              onClick={() => setParticipateInfoExpanded(e => !e)}
+              onClick={() => setInfoModalOpen(true)}
               style={{ background: 'none', border: 'none', color: '#4ecdc4', fontWeight: 600, fontSize: 14, cursor: 'pointer', textAlign: 'left', outline: 'none', display: 'flex', alignItems: 'center', gap: 6, margin: 0, padding: 0 }}
-              aria-expanded={participateInfoExpanded}
             >
-              <span style={{ textAlign: 'left', display: 'block', color: '#4ecdc4' }}>{participateInfoExpanded ? '▼' : '▶'} Info</span>
+              <span style={{ textAlign: 'left', display: 'block', color: '#4ecdc4' }}>▶ Info</span>
             </button>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1841,31 +1988,6 @@ function App() {
             </label>
           </div>
         </div>
-        {participateInfoExpanded && (
-          <div style={{ marginTop: 4, marginBottom: 16, color: '#888', fontSize: 15, textAlign: 'justify', lineHeight: 1.6, background: '#f7fafd', border: '1px solid #e3eaf2', borderRadius: 10, boxShadow: '0 1px 4px rgba(44,62,80,0.04)', padding: '16px 20px', maxWidth: 700, marginLeft: 'auto', marginRight: 'auto' }}>
-            <div style={{ marginBottom: '20px' }}>
-              <b style={{ color: '#232946', fontSize: '16px' }}>How This DApp Works:</b><br/><br/>
-              <b>Creating Organizations:</b> Click the "Create New Organization" button below to define a name and purpose. Organizations are deployed as smart contracts on the Sepolia testnet using upgradeable proxy patterns for security and flexibility.<br/><br/>
-              <b>Constitution Signing:</b> Once created, organizations require partners to sign the <a href="https://www.holacracy.org/constitution/5-0/" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>Holacracy Constitution</a> to become active participants. This creates legally binding agreements and establishes governance structures.<br/><br/>
-              <b>Participation:</b> Founders are initial signers who launch the organization. Partners can join later by signing the constitution. All participants operate under clear roles, accountabilities, and governance processes defined by the Holacracy framework.<br/><br/>
-              <b>Organization Management:</b> Creators can update organization details, archive/unarchive organizations, and manage the overall structure. All actions are recorded on the blockchain for transparency and auditability.
-            </div>
-            
-            <div style={{ 
-              padding: '12px', 
-              background: '#f0f9ff', 
-              border: '1px solid #0ea5e9', 
-              borderRadius: '8px',
-              fontSize: '13px',
-              marginBottom: '16px'
-            }}>
-              <b style={{ color: '#0c4a6e' }}>Technical Information:</b><br/>
-              <strong>Network:</strong> Sepolia Testnet | 
-              <strong>Factory:</strong> <a href={`https://sepolia.etherscan.io/address/${addresses.HOLACRACY_FACTORY}`} target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>{addresses.HOLACRACY_FACTORY.slice(0, 8)}...{addresses.HOLACRACY_FACTORY.slice(-6)}</a> | 
-              <strong>Implementation:</strong> <a href={`https://sepolia.etherscan.io/address/${addresses.ORGANIZATION_IMPLEMENTATION}`} target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>{addresses.ORGANIZATION_IMPLEMENTATION.slice(0, 8)}...{addresses.ORGANIZATION_IMPLEMENTATION.slice(-6)}</a>
-            </div>
-          </div>
-        )}
         
         {/* Create Organization Button */}
         <div style={{ 
@@ -1875,7 +1997,11 @@ function App() {
           marginTop: '16px'
         }}>
           <button
-            onClick={() => setCreateOrgModalOpen(true)}
+            onClick={() => {
+              setCreateOrgModalOpen(true);
+              setCreateOrgModalSuccess(""); // Clear any previous success message
+              setSuccess(""); // Also clear the general success state
+            }}
             style={{
               background: '#4ecdc4',
               color: '#fff',

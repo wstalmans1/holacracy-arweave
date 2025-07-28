@@ -4,7 +4,7 @@ async function main() {
   console.log("🔍 Verifying All Holacracy Contracts on Etherscan...");
   
   // Load deployment info
-  const deploymentInfo = require("../deployment-optimized.json");
+  const deploymentInfo = require("../deployment-new.json");
   const { contracts } = deploymentInfo;
   
   console.log("📋 Contract Addresses to verify:");
