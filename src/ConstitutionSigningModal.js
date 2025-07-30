@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
+import { constitutionText } from './constitutionText';
 
 const ConstitutionSigningModal = ({ 
   org, 
@@ -12,10 +13,8 @@ const ConstitutionSigningModal = ({
 }) => {
   const [hasReadConstitution, setHasReadConstitution] = useState(false);
   const [explicitConsent, setExplicitConsent] = useState(false);
-  const [constitutionText, setConstitutionText] = useState('');
   const [loading, setLoading] = useState(true);
   const [scrollPosition, setScrollPosition] = useState(0);
-  const [showFullConstitution, setShowFullConstitution] = useState(false);
 
   // Reset state when modal opens
   useEffect(() => {
@@ -23,70 +22,9 @@ const ConstitutionSigningModal = ({
       setHasReadConstitution(false);
       setExplicitConsent(false);
       setScrollPosition(0);
-      setShowFullConstitution(false);
-      loadConstitutionText();
+      setLoading(false);
     }
   }, [open]);
-
-  const loadConstitutionText = async () => {
-    setLoading(true);
-    try {
-      // Note: We're using hardcoded constitution text instead of fetching from the API
-      // In production, you'd want to use a proper API or store the text locally
-      // const response = await fetch('https://www.holacracy.org/constitution/5-0/');
-      // const html = await response.text();
-      
-      // Extract the main content (this is a simplified approach)
-      // In production, you'd want to use a proper API or store the text locally
-      const constitutionContent = `
-HOLACRACY CONSTITUTION v5.0
-
-PREAMBLE
-The Ratifiers of this Constitution are adopting it as the formal authority structure for the Organization, and they are doing so with the following intentions and understandings:
-
-1.1 PURPOSE
-This Constitution defines the rules and processes for the Organization's governance and operations. The Organization will be run by the authority structure defined in this Constitution, and no other authority structure has power over the Organization's governance or operations, except as specifically defined in this Constitution.
-
-1.2 CORE AUTHORITY
-The Organization's Partners have the authority to take any action or make any decision to pursue the Organization's Purpose, as long as they don't break the rules defined in this Constitution or any Policy.
-
-1.3 ROLES AND ACCOUNTABILITIES
-The Organization's work is divided into Roles, which are defined by their Purpose, Domains, and Accountabilities. Each Role has the authority to take any action to express its Purpose or Accountabilities, as long as it doesn't break the rules defined in this Constitution or any Policy.
-
-1.4 GOVERNANCE PROCESS
-The Organization's governance is processed through a structured governance process that allows Partners to propose changes to the Organization's structure and processes.
-
-1.5 OPERATIONAL PROCESS
-The Organization's day-to-day operations are processed through a structured operational process that allows Partners to coordinate their work and make decisions.
-
-1.6 PARTNER AUTHORITY
-Partners have the authority to:
-- Take any action to express the Organization's Purpose
-- Make any decision within their Roles
-- Propose changes to governance
-- Object to governance proposals that would cause harm
-- Request information needed to fulfill their Roles
-
-1.7 CONSTITUTION AMENDMENTS
-This Constitution can only be amended through a formal amendment process that requires broad consensus among Partners.
-
-By signing this Constitution, I acknowledge that I have read and understood its contents, and I agree to be bound by its terms and conditions in my participation in this Organization.
-      `;
-      
-      setConstitutionText(constitutionContent);
-    } catch (error) {
-      console.error('Error loading constitution:', error);
-      // Fallback to basic constitution text
-      setConstitutionText(`
-HOLACRACY CONSTITUTION v5.0
-
-By signing this Constitution, I acknowledge that I have read and understood the Holacracy Constitution v5.0, and I agree to be bound by its terms and conditions in my participation in this Organization.
-
-I understand that in a Holacracy, all authority derives from the Constitution, not from individuals, and I commit to operating within this framework.
-      `);
-    }
-    setLoading(false);
-  };
 
   const handleScroll = (e) => {
     const { scrollTop, scrollHeight, clientHeight } = e.target;
@@ -284,25 +222,10 @@ I understand that in a Holacracy, all authority derives from the Constitution, n
                   }}>
                     Constitution Text
                   </h3>
-                  <button
-                    onClick={() => setShowFullConstitution(!showFullConstitution)}
-                    style={{
-                      background: '#4ecdc4',
-                      color: '#fff',
-                      border: 'none',
-                      borderRadius: '6px',
-                      padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '6px 12px' : '8px 16px',
-                      fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '12px' : '14px',
-                      fontWeight: '600',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    {showFullConstitution ? 'Summary' : 'Full Text'}
-                  </button>
                 </div>
 
                 <div style={{
-                  height: showFullConstitution ? (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '350px' : '400px') : (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '200px' : '200px'),
+                  height: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '350px' : '400px',
                   overflow: 'auto',
                   overflowY: 'scroll',
                   WebkitOverflowScrolling: 'touch',
@@ -323,16 +246,14 @@ I understand that in a Holacracy, all authority derives from the Constitution, n
                   </pre>
                 </div>
 
-                {!showFullConstitution && (
-                  <div style={{
-                    marginTop: '8px',
-                    fontSize: '12px',
-                    color: '#888',
-                    textAlign: 'center'
-                  }}>
-                    Scroll to read full constitution • {Math.round(scrollPosition)}% read
-                  </div>
-                )}
+                <div style={{
+                  marginTop: '8px',
+                  fontSize: '12px',
+                  color: '#888',
+                  textAlign: 'center'
+                }}>
+                  Scroll to read full constitution • {Math.round(scrollPosition)}% read
+                </div>
               </div>
 
               {/* Consent Section */}
@@ -390,6 +311,12 @@ I understand that in a Holacracy, all authority derives from the Constitution, n
                       <strong>I explicitly consent to be bound by the Holacracy Constitution v5.0</strong> 
                       and agree to operate within this governance framework as a partner in this organization. 
                       I understand that in a Holacracy, all authority derives from the Constitution, not from individuals.
+                      <br /><br />
+                      I acknowledge that the organization with contract address{' '}
+                      <span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#4a5568' }}>
+                        {org?.address || 'Loading...'}
+                      </span>{' '}
+                      is a holacracy organization which operates according to and has as only authority this constitution.
                     </span>
                   </label>
                 </div>
