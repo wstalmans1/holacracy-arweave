@@ -128,58 +128,46 @@ const ConstitutionSigningModal = ({
       left: 0,
       right: 0,
       bottom: 0,
-      background: 'rgba(0, 0, 0, 0.7)',
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
       display: 'flex',
-      alignItems: 'center',
       justifyContent: 'center',
-      zIndex: 2000,
-      padding: '20px'
+      alignItems: 'center',
+      zIndex: 1000,
+      padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '8px' : '0'
     }}>
       <div style={{
-        background: '#fff',
+        backgroundColor: '#232946',
         borderRadius: 12,
-        maxWidth: '800px',
-        width: '100%',
-        maxHeight: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '95vh' : '90vh',
+        border: '2px solid #4ecdc4',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+        width: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '100%' : '90%',
+        maxWidth: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'none' : '800px',
+        height: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '100%' : '90vh',
+        maxHeight: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '100%' : '90vh',
+        margin: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '0' : '0',
         display: 'flex',
         flexDirection: 'column',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-        margin: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '8px' : '0'
+        overflow: 'hidden'
       }}>
         {/* Header */}
         <div style={{
           padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '16px 12px 8px 12px' : '24px 32px 16px 32px',
-          borderBottom: '1px solid #e3eaf2',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
+          borderBottom: '1px solid #4ecdc4',
+          backgroundColor: '#232946',
+          flexShrink: 0
         }}>
           <h2 style={{
             margin: 0,
+            color: '#4ecdc4',
             fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '20px' : '24px',
-            fontWeight: '700',
-            color: '#232946'
+            fontWeight: 600,
+            textAlign: 'center'
           }}>
             Sign Holacracy Constitution
           </h2>
-          <button
-            onClick={onClose}
-            style={{
-              background: 'none',
-              border: 'none',
-              fontSize: '24px',
-              cursor: 'pointer',
-              color: '#888',
-              padding: '4px',
-              borderRadius: '4px'
-            }}
-            title="Close"
-          >
-            ×
-          </button>
         </div>
 
-        {/* Content */}
+        {/* Main content area - Full height scrolling container */}
         <div style={{
           flex: 1,
           overflow: 'hidden',
@@ -187,193 +175,185 @@ const ConstitutionSigningModal = ({
           flexDirection: 'column',
           minHeight: 0
         }}>
-          {loading ? (
+          {/* Constitution text area - Takes full available space */}
+          <div style={{
+            flex: 1,
+            padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '12px' : '24px 32px',
+            overflow: 'auto',
+            WebkitOverflowScrolling: 'touch'
+          }}>
             <div style={{
-              padding: '40px',
-              textAlign: 'center',
-              color: '#888'
+              fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '13px' : '14px',
+              lineHeight: 1.6,
+              color: '#b8c1ec',
+              whiteSpace: 'pre-wrap',
+              fontFamily: 'inherit'
             }}>
-              Loading constitution...
+              {constitutionText}
             </div>
-          ) : (
-            <>
-              {/* Constitution Display */}
-              <div style={{
-                flex: 1,
-                padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '12px' : '24px 32px',
-                overflow: 'hidden',
-                display: 'flex',
-                flexDirection: 'column',
-                minHeight: 0
-              }}>
-                <div style={{
-                  marginBottom: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '12px' : '16px',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  flexWrap: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'wrap' : 'nowrap',
-                  gap: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '8px' : '0'
-                }}>
-                  <h3 style={{
-                    margin: 0,
-                    fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '16px' : '18px',
-                    fontWeight: '600',
-                    color: '#232946'
-                  }}>
-                    Constitution Text
-                  </h3>
-                </div>
 
-                <div style={{
-                  height: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '350px' : '400px',
-                  overflow: 'auto',
-                  overflowY: 'scroll',
-                  WebkitOverflowScrolling: 'touch',
-                  border: '1px solid #e3eaf2',
-                  borderRadius: '8px',
-                  padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '10px' : '16px',
-                  background: '#f7fafd',
-                  fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '13px' : '14px',
-                  lineHeight: '1.6',
-                  color: '#232946'
-                }} onScroll={handleScroll}>
-                  <pre style={{
-                    margin: 0,
-                    whiteSpace: 'pre-wrap',
-                    fontFamily: 'inherit'
-                  }}>
-                    {constitutionText}
-                  </pre>
-                </div>
-
-                <div style={{
-                  marginTop: '8px',
-                  fontSize: '12px',
-                  color: '#888',
-                  textAlign: 'center'
-                }}>
-                  Scroll to read full constitution • {Math.round(scrollPosition)}% read
-                </div>
-              </div>
-
+            {/* Signing section - At the end of the constitution text */}
+            <div style={{
+              marginTop: '32px',
+              paddingTop: '24px',
+              borderTop: '1px solid #4ecdc4',
+              backgroundColor: '#232946'
+            }}>
               {/* Consent Section */}
               <div style={{
-                padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '10px 12px' : '16px 32px',
-                borderTop: '1px solid #e3eaf2',
-                background: '#f7fafd'
+                marginBottom: '24px'
               }}>
-                <div style={{
-                  marginBottom: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '12px' : '16px'
+                <h3 style={{
+                  color: '#4ecdc4',
+                  fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '16px' : '18px',
+                  marginBottom: '16px',
+                  fontWeight: 600
                 }}>
-                  <label style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: '12px',
-                    cursor: 'pointer',
-                    fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '13px' : '14px',
-                    lineHeight: '1.5'
-                  }}>
-                    <input
-                      type="checkbox"
-                      checked={hasReadConstitution}
-                      onChange={(e) => setHasReadConstitution(e.target.checked)}
-                      style={{
-                        marginTop: '2px'
-                      }}
-                    />
-                    <span>
-                      <strong>I confirm that I have read the entire Holacracy Constitution v5.0</strong> 
-                      and understand its contents, including the governance and operational processes.
-                    </span>
-                  </label>
-                </div>
+                  Consent to Constitution
+                </h3>
 
-                <div style={{
-                  marginBottom: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '12px' : '16px'
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '12px',
+                  marginBottom: '16px',
+                  cursor: 'pointer',
+                  fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '13px' : '14px',
+                  lineHeight: 1.5,
+                  color: '#b8c1ec'
                 }}>
-                  <label style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: '12px',
-                    cursor: 'pointer',
-                    fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '13px' : '14px',
-                    lineHeight: '1.5'
-                  }}>
-                    <input
-                      type="checkbox"
-                      checked={explicitConsent}
-                      onChange={(e) => setExplicitConsent(e.target.checked)}
-                      style={{
-                        marginTop: '2px'
-                      }}
-                    />
-                    <span>
-                      <strong>I explicitly consent to be bound by the Holacracy Constitution v5.0</strong> 
-                      and agree to operate within this governance framework as a partner in this organization. 
-                      I understand that in a Holacracy, all authority derives from the Constitution, not from individuals.
-                      <br /><br />
-                      I acknowledge that the organization with contract address{' '}
-                      <span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#4a5568' }}>
-                        {org?.address || 'Loading...'}
-                      </span>{' '}
-                      is a holacracy organization which operates according to and has as only authority this constitution.
-                    </span>
-                  </label>
-                </div>
+                  <input
+                    type="checkbox"
+                    checked={hasReadConstitution}
+                    onChange={(e) => setHasReadConstitution(e.target.checked)}
+                    style={{
+                      marginTop: '2px',
+                      transform: 'scale(1.2)',
+                      accentColor: '#4ecdc4'
+                    }}
+                  />
+                  <span>
+                    I confirm that I have read and understood the complete Holacracy Constitution v5.0 above.
+                  </span>
+                </label>
 
-                <div style={{
-                  padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '10px' : '12px',
-                  background: '#e3eaf2',
-                  borderRadius: '6px',
-                  fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '12px' : '13px',
-                  color: '#4a5568',
-                  lineHeight: '1.4'
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '12px',
+                  marginBottom: '16px',
+                  cursor: 'pointer',
+                  fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '13px' : '14px',
+                  lineHeight: 1.5,
+                  color: '#b8c1ec'
                 }}>
-                  <strong>Legal Notice:</strong> By signing this constitution, you are creating a legally binding agreement. 
-                  This signature will be recorded on the blockchain and stored securely. You acknowledge that this electronic 
-                  signature has the same legal effect as a handwritten signature.
-                </div>
+                  <input
+                    type="checkbox"
+                    checked={explicitConsent}
+                    onChange={(e) => setExplicitConsent(e.target.checked)}
+                    style={{
+                      marginTop: '2px',
+                      transform: 'scale(1.2)',
+                      accentColor: '#4ecdc4'
+                    }}
+                  />
+                  <span>
+                    <strong>I explicitly consent to be bound by the Holacracy Constitution v5.0</strong> 
+                    and agree to operate within this governance framework as a partner in this organization, with contract address{' '}
+                    <a 
+                      href={`https://sepolia.etherscan.io/address/${org?.address}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      style={{ 
+                        color: '#4ecdc4', 
+                        textDecoration: 'underline',
+                        fontFamily: 'monospace',
+                        fontSize: '11px'
+                      }}
+                    >
+                      {org?.address || 'Loading...'}
+                    </a>. 
+                    I understand that in a Holacracy, all authority derives from the Constitution, not from individuals.
+                  </span>
+                </label>
               </div>
-            </>
-          )}
+
+              {/* Legal Notice */}
+              <div style={{
+                padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '10px' : '12px',
+                fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '12px' : '13px',
+                backgroundColor: '#1a1f2e',
+                borderRadius: 8,
+                border: '1px solid #4a5568',
+                color: '#a0aec0',
+                marginBottom: '24px'
+              }}>
+                <strong>Legal Notice:</strong> By signing this constitution, you are entering into a binding agreement to operate within the Holacracy governance framework. This signature is recorded on the blockchain and is legally enforceable.
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Footer */}
+        {/* Footer with buttons */}
         <div style={{
           padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '12px' : '24px 32px',
-          borderTop: '1px solid #e3eaf2',
+          borderTop: '1px solid #4ecdc4',
+          backgroundColor: '#232946',
+          flexShrink: 0,
+          gap: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '8px' : '12px',
           display: 'flex',
-          justifyContent: 'flex-end',
-          gap: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '8px' : '12px'
+          justifyContent: 'space-between',
+          alignItems: 'center'
         }}>
           <button
             onClick={onClose}
             style={{
-              background: 'none',
-              border: '1px solid #e3eaf2',
-              borderRadius: '6px',
               padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '10px 16px' : '12px 24px',
               fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '13px' : '14px',
-              fontWeight: '600',
+              backgroundColor: 'transparent',
+              color: '#4ecdc4',
+              border: '1px solid #4ecdc4',
+              borderRadius: 8,
               cursor: 'pointer',
-              color: '#4a5568'
+              fontWeight: 600,
+              transition: 'all 0.2s ease'
             }}
-            disabled={signingPending}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = '#4ecdc4';
+              e.target.style.color = '#232946';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = 'transparent';
+              e.target.style.color = '#4ecdc4';
+            }}
           >
             Cancel
           </button>
+
           <button
             onClick={handleSignConstitution}
             disabled={!hasReadConstitution || !explicitConsent || signingPending}
             style={{
-              background: hasReadConstitution && explicitConsent && !signingPending ? '#4ecdc4' : '#e3eaf2',
-              color: hasReadConstitution && explicitConsent && !signingPending ? '#fff' : '#888',
-              border: 'none',
-              borderRadius: '6px',
               padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '10px 16px' : '12px 24px',
               fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '13px' : '14px',
-              fontWeight: '600',
-              cursor: hasReadConstitution && explicitConsent && !signingPending ? 'pointer' : 'not-allowed'
+              backgroundColor: hasReadConstitution && explicitConsent && !signingPending ? '#4ecdc4' : '#4a5568',
+              color: hasReadConstitution && explicitConsent && !signingPending ? '#232946' : '#a0aec0',
+              border: 'none',
+              borderRadius: 8,
+              cursor: hasReadConstitution && explicitConsent && !signingPending ? 'pointer' : 'not-allowed',
+              fontWeight: 600,
+              transition: 'all 0.2s ease',
+              minWidth: '120px'
+            }}
+            onMouseEnter={(e) => {
+              if (hasReadConstitution && explicitConsent && !signingPending) {
+                e.target.style.backgroundColor = '#45b7aa';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (hasReadConstitution && explicitConsent && !signingPending) {
+                e.target.style.backgroundColor = '#4ecdc4';
+              }
             }}
           >
             {signingPending ? 'Signing...' : 'Sign Constitution'}
