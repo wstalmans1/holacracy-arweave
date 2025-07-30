@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "build": "cd frontend && npm install && npm run build && cp -r build ../dist",
+    "build": "cd frontend && npm install && npm run build && cd .. && cp -r frontend/build dist",
     "start": "cd frontend && npm start",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
