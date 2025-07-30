@@ -1045,10 +1045,12 @@ function App() {
       if (isMobile) {
         try {
           console.log('Mobile detected, using WalletConnect...');
+          console.log('Initializing WalletConnect provider...');
+          
           const provider = await EthereumProvider.init({
             projectId: 'c4f79cc821944d9680842e34466bfbd9', // Public test project ID
             chains: [11155111], // Sepolia chain ID
-            showQrModal: true,
+            showQrModal: false, // Disable QR modal on mobile
             metadata: {
               name: 'Holacracy DApp',
               description: 'Holacracy Organization Creation & Participation DApp',
@@ -1057,14 +1059,20 @@ function App() {
             }
           });
           
+          console.log('WalletConnect provider initialized, attempting to connect...');
           await provider.connect();
+          console.log('WalletConnect connection successful');
+          
           setWalletConnectProvider(provider);
           
+          console.log('Creating ethers provider...');
           const ethersProvider = new ethers.BrowserProvider(provider);
           const accounts = await ethersProvider.listAccounts();
+          console.log('Accounts found:', accounts.length);
           setAccount(accounts[0].address);
           
           const net = await ethersProvider.getNetwork();
+          console.log('Network chain ID:', net.chainId.toString());
           if (net.chainId.toString() !== SEPOLIA_CHAIN_ID) {
             setError("Please switch to the Sepolia network in your wallet.");
             setConnecting(false);
@@ -1075,9 +1083,36 @@ function App() {
           const fac = new ethers.Contract(addresses.HOLACRACY_FACTORY, getAbiArray(factoryArtifact), sign);
           setFactory(fac);
           setConnecting(false);
+          console.log('Mobile wallet connection completed successfully');
         } catch (wcError) {
           console.error('WalletConnect error:', wcError);
-          setError("Failed to connect with WalletConnect. Please try again or use MetaMask.");
+          console.error('Error details:', wcError.message, wcError.stack);
+          
+          // Try MetaMask as fallback on mobile
+          console.log('Trying MetaMask as fallback on mobile...');
+          if (window.ethereum) {
+            try {
+              const prov = new ethers.BrowserProvider(window.ethereum);
+              const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
+              setAccount(accs[0]);
+              const net = await prov.getNetwork();
+              if (net.chainId.toString() !== SEPOLIA_CHAIN_ID) {
+                setError("Please switch to the Sepolia network in your wallet.");
+                setConnecting(false);
+                return;
+              }
+              const sign = await prov.getSigner();
+              const fac = new ethers.Contract(addresses.HOLACRACY_FACTORY, getAbiArray(factoryArtifact), sign);
+              setFactory(fac);
+              setConnecting(false);
+              console.log('Mobile MetaMask fallback successful');
+              return;
+            } catch (mmError) {
+              console.error('MetaMask fallback error:', mmError);
+            }
+          }
+          
+          setError("Failed to connect with WalletConnect or MetaMask. Please try again.");
           setConnecting(false);
         }
       } else {
