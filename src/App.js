@@ -365,32 +365,33 @@ function OrganizationDetailsOverlay({ org, open, onClose, account, loadOrgs, Org
               <strong>⚠️ Old Contract Version:</strong> This organization was created with an older version of the contract that doesn't support the partners list feature. You may have signed the constitution, but the partners list cannot be displayed.
             </div>
           )}
-          <h3 style={{ 
-            margin: '0 0 12px 0', 
-            fontSize: '18px', 
-            fontWeight: '600', 
-            color: '#232946' 
-          }}>
-            Partners ({org.partners.length})
-          </h3>
           <div style={{ 
             display: 'flex', 
             flexWrap: 'wrap', 
             gap: '8px',
             maxHeight: '200px',
             overflowY: 'auto',
-            padding: '12px',
+            padding: '16px',
             background: '#f7fafd',
             borderRadius: '8px',
             border: '1px solid #e3eaf2'
           }}>
+            <h3 style={{ 
+              margin: '0 0 4px 0', 
+              fontSize: '13px', 
+              fontWeight: '600', 
+              color: '#232946',
+              width: '100%'
+            }}>
+              Partners ({org.partners.length})
+            </h3>
             {org.partners.length === 0 ? (
               <div style={{ color: '#888', fontStyle: 'italic' }}>No partners yet</div>
             ) : (
               org.partners.map(addr => (
                 <div key={addr} style={{ 
                   fontFamily: 'monospace', 
-                  fontSize: '13px', 
+                  fontSize: '11px', 
                   color: '#232946', 
                   background: addr.toLowerCase() === account?.toLowerCase() ? '#4ecdc4' : '#e3eaf2', 
                   borderRadius: '6px', 
@@ -1606,7 +1607,7 @@ function App() {
                             ⚠ You must be a partner to perform organization actions
                           </div>
                           <div style={{ color: '#232946', fontSize: 14, marginBottom: 8, lineHeight: 1.5 }}>
-                            To join this organization as a partner, you declare that you understand that <span style={{ color: '#1a5f7a', fontWeight: 600 }}>In a Holacracy, all authority derives from the Constitution, not from individuals</span>. You confirm your understanding by signing the <a href="https://www.holacracy.org/constitution/5-0/" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>Holacracy Constitution</a>.
+                            Anyone can join this organization as a partner, by declaring that you understand that <span style={{ color: '#1a5f7a', fontWeight: 600 }}>In a Holacracy, all authority derives from the Constitution, not from individuals</span>. You confirm your understanding by signing the <a href="https://www.holacracy.org/constitution/5-0/" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>Holacracy Constitution</a>. Signing the constitution requires reading its text, which counts almost 8000 words and takes between 40 and 60 minutes to read.
                           </div>
                           <button 
                             style={{
