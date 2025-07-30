@@ -1041,79 +1041,40 @@ function App() {
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       console.log('Mobile detection result:', isMobile);
       
-      // On mobile, prefer WalletConnect for better compatibility
+      // On mobile, use simplified connection approach
       if (isMobile) {
-        try {
-          console.log('Mobile detected, using WalletConnect...');
-          console.log('Initializing WalletConnect provider...');
-          
-          const provider = await EthereumProvider.init({
-            projectId: 'c4f79cc821944d9680842e34466bfbd9', // Public test project ID
-            chains: [11155111], // Sepolia chain ID
-            showQrModal: false, // Disable QR modal on mobile
-            metadata: {
-              name: 'Holacracy DApp',
-              description: 'Holacracy Organization Creation & Participation DApp',
-              url: window.location.host,
-              icons: ['https://raw.githubusercontent.com/WalletConnect/walletconnect-assets/master/Logo/Blue%20(Default)/Logo.svg']
+        console.log('Mobile detected, using simplified connection...');
+        
+        // Try MetaMask Mobile (most reliable on mobile)
+        if (window.ethereum) {
+          try {
+            console.log('Trying MetaMask Mobile...');
+            const prov = new ethers.BrowserProvider(window.ethereum);
+            const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            setAccount(accs[0]);
+            const net = await prov.getNetwork();
+            if (net.chainId.toString() !== SEPOLIA_CHAIN_ID) {
+              setError("Please switch to the Sepolia network in your wallet.");
+              setConnecting(false);
+              return;
             }
-          });
-          
-          console.log('WalletConnect provider initialized, attempting to connect...');
-          await provider.connect();
-          console.log('WalletConnect connection successful');
-          
-          setWalletConnectProvider(provider);
-          
-          console.log('Creating ethers provider...');
-          const ethersProvider = new ethers.BrowserProvider(provider);
-          const accounts = await ethersProvider.listAccounts();
-          console.log('Accounts found:', accounts.length);
-          setAccount(accounts[0].address);
-          
-          const net = await ethersProvider.getNetwork();
-          console.log('Network chain ID:', net.chainId.toString());
-          if (net.chainId.toString() !== SEPOLIA_CHAIN_ID) {
-            setError("Please switch to the Sepolia network in your wallet.");
+            const sign = await prov.getSigner();
+            const fac = new ethers.Contract(addresses.HOLACRACY_FACTORY, getAbiArray(factoryArtifact), sign);
+            setFactory(fac);
+            setConnecting(false);
+            console.log('MetaMask Mobile connection successful');
+            return;
+          } catch (mmError) {
+            console.error('MetaMask Mobile error:', mmError);
+            setError("MetaMask connection failed. Please open this DApp in your wallet's browser or try a different wallet.");
             setConnecting(false);
             return;
           }
-          
-          const sign = await ethersProvider.getSigner();
-          const fac = new ethers.Contract(addresses.HOLACRACY_FACTORY, getAbiArray(factoryArtifact), sign);
-          setFactory(fac);
+        } else {
+          // No MetaMask available on mobile
+          setError("No wallet detected. Please open this DApp in your wallet's built-in browser (MetaMask, Trust Wallet, etc.).");
           setConnecting(false);
-          console.log('Mobile wallet connection completed successfully');
-        } catch (wcError) {
-          console.error('WalletConnect error:', wcError);
-          console.error('Error details:', wcError.message, wcError.stack);
-          
-          // Try MetaMask as fallback on mobile
-          console.log('Trying MetaMask as fallback on mobile...');
-          if (window.ethereum) {
-            try {
-              const prov = new ethers.BrowserProvider(window.ethereum);
-              const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
-              setAccount(accs[0]);
-              const net = await prov.getNetwork();
-              if (net.chainId.toString() !== SEPOLIA_CHAIN_ID) {
-                setError("Please switch to the Sepolia network in your wallet.");
-                setConnecting(false);
-                return;
-              }
-              const sign = await prov.getSigner();
-              const fac = new ethers.Contract(addresses.HOLACRACY_FACTORY, getAbiArray(factoryArtifact), sign);
-              setFactory(fac);
-              setConnecting(false);
-              console.log('Mobile MetaMask fallback successful');
-              return;
-            } catch (mmError) {
-              console.error('MetaMask fallback error:', mmError);
-            }
-          }
-          
-          setError("Failed to connect with WalletConnect or MetaMask. Please try again.");
-          setConnecting(false);
+          return;
         }
       } else {
         // On desktop, try MetaMask first
@@ -1973,9 +1934,7 @@ function App() {
             fontSize: 17, 
             color: '#b8c1ec', 
             marginTop: 10, 
-            textAlign: 'center',
-            paddingLeft: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '16px' : '0',
-            paddingRight: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '16px' : '0'
+            textAlign: 'center'
           }}>
             In a Holacracy, all authority derives from the <a href="https://www.holacracy.org/constitution/5-0/" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>Constitution</a>, not from individuals.
           </div>
@@ -2280,7 +2239,7 @@ function App() {
                   <span style={{ marginRight: 4 }}>
                     {/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'Details' : 'View Details'}
                   </span>
-                  <span>▶</span>
+                  {!/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && <span>▶</span>}
                 </div>
               </div>
             </div>
