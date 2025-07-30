@@ -1989,17 +1989,6 @@ function App() {
                 >
                   Connect Wallet
                 </button>
-                                  {/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && (
-                    <div style={{ 
-                      fontSize: '11px', 
-                      color: '#b8c1ec', 
-                      textAlign: 'center', 
-                      maxWidth: '200px',
-                      lineHeight: '1.3'
-                    }}>
-                      💡 Mobile: Will use WalletConnect for better compatibility
-                    </div>
-                  )}
               </div>
             )}
           </div>
@@ -2051,25 +2040,24 @@ function App() {
       <div style={styles.section}>
         <div style={{ 
           display: 'flex', 
-          alignItems: 'center', 
-          minHeight: 24, 
-          justifyContent: 'space-between', 
+          flexDirection: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'column' : 'row',
+          alignItems: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'center' : 'center',
+          justifyContent: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'flex-start' : 'space-between',
           marginBottom: 20, 
           marginTop: 8, 
           position: 'relative',
-          flexWrap: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'wrap' : 'nowrap',
-          gap: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '8px' : '0',
           paddingLeft: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '8px' : '0',
           paddingRight: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '8px' : '0'
         }}>
           <div style={{ 
             display: 'flex', 
             alignItems: 'center', 
-            gap: 6
+            gap: 6,
+            marginBottom: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 12 : 0
           }}>
             <span style={{ 
               color: '#232946', 
-              fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 18 : 22, 
+              fontSize: 22, 
               fontWeight: 700, 
               display: 'flex', 
               alignItems: 'center', 
@@ -2091,7 +2079,7 @@ function App() {
               alignItems: 'center', 
               gap: 4, 
               cursor: 'pointer',
-              fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '11px' : '12px',
+              fontSize: '12px',
               color: '#9ca3af',
               fontWeight: '400',
               whiteSpace: 'nowrap'
@@ -2114,7 +2102,7 @@ function App() {
         {/* Create Organization Button */}
         <div style={{ 
           display: 'flex', 
-          justifyContent: 'flex-start', 
+          justifyContent: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'center' : 'flex-start', 
           marginBottom: '32px',
           marginTop: '16px'
         }}>
