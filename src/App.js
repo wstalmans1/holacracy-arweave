@@ -1035,9 +1035,11 @@ function App() {
   const connectWallet = async () => {
     setError("");
     setConnecting(true);
+    console.log('Connect wallet function called');
     try {
       // Check if we're on mobile
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      console.log('Mobile detection result:', isMobile);
       
       // On mobile, prefer WalletConnect for better compatibility
       if (isMobile) {
@@ -1072,9 +1074,11 @@ function App() {
           const sign = await ethersProvider.getSigner();
           const fac = new ethers.Contract(addresses.HOLACRACY_FACTORY, getAbiArray(factoryArtifact), sign);
           setFactory(fac);
+          setConnecting(false);
         } catch (wcError) {
           console.error('WalletConnect error:', wcError);
           setError("Failed to connect with WalletConnect. Please try again or use MetaMask.");
+          setConnecting(false);
         }
       } else {
         // On desktop, try MetaMask first
@@ -1091,6 +1095,7 @@ function App() {
           const sign = await prov.getSigner();
           const fac = new ethers.Contract(addresses.HOLACRACY_FACTORY, getAbiArray(factoryArtifact), sign);
           setFactory(fac);
+          setConnecting(false);
         } else {
           // Desktop fallback to WalletConnect
           try {
@@ -1123,17 +1128,19 @@ function App() {
             const sign = await ethersProvider.getSigner();
             const fac = new ethers.Contract(addresses.HOLACRACY_FACTORY, getAbiArray(factoryArtifact), sign);
             setFactory(fac);
+            setConnecting(false);
           } catch (wcError) {
             console.error('WalletConnect error:', wcError);
             setError("Failed to connect with WalletConnect. Please try again or use MetaMask.");
+            setConnecting(false);
           }
         }
       }
     } catch (e) {
       console.error('Wallet connection error:', e);
       setError("Failed to connect wallet: " + (e?.message || e));
+      setConnecting(false);
     }
-    setConnecting(false);
   };
 
 
