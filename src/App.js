@@ -1933,7 +1933,15 @@ function App() {
               </span>
             </h1>
           </div>
-          <div style={{ fontWeight: 400, fontSize: 17, color: '#b8c1ec', marginTop: 10, textAlign: 'center' }}>
+          <div style={{ 
+            fontWeight: 400, 
+            fontSize: 17, 
+            color: '#b8c1ec', 
+            marginTop: 10, 
+            textAlign: 'center',
+            paddingLeft: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '16px' : '0',
+            paddingRight: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '16px' : '0'
+          }}>
             In a Holacracy, all authority derives from the <a href="https://www.holacracy.org/constitution/5-0/" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>Constitution</a>, not from individuals.
           </div>
           <div style={{ marginTop: 18, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12 }}>
@@ -2234,7 +2242,9 @@ function App() {
                   alignItems: 'flex-start',
                   paddingTop: '2px'
                 }}>
-                  <span style={{ marginRight: 4 }}>View Details</span>
+                  <span style={{ marginRight: 4 }}>
+                    {/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'Details' : 'View Details'}
+                  </span>
                   <span>▶</span>
                 </div>
               </div>
