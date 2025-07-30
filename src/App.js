@@ -1045,10 +1045,18 @@ function App() {
       if (isMobile) {
         console.log('Mobile detected, using simplified connection...');
         
-        // Try MetaMask Mobile (most reliable on mobile)
-        if (window.ethereum) {
+        // Check if we're in a wallet's browser
+        const isInWalletBrowser = window.ethereum && (
+          window.ethereum.isMetaMask || 
+          window.ethereum.isTrust || 
+          window.ethereum.isCoinbaseWallet ||
+          window.ethereum.isTokenPocket ||
+          window.ethereum.isImToken
+        );
+        
+        if (isInWalletBrowser) {
           try {
-            console.log('Trying MetaMask Mobile...');
+            console.log('Trying wallet browser connection...');
             const prov = new ethers.BrowserProvider(window.ethereum);
             const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
             setAccount(accs[0]);
@@ -1062,17 +1070,17 @@ function App() {
             const fac = new ethers.Contract(addresses.HOLACRACY_FACTORY, getAbiArray(factoryArtifact), sign);
             setFactory(fac);
             setConnecting(false);
-            console.log('MetaMask Mobile connection successful');
+            console.log('Wallet browser connection successful');
             return;
-          } catch (mmError) {
-            console.error('MetaMask Mobile error:', mmError);
-            setError("MetaMask connection failed. Please open this DApp in your wallet's browser or try a different wallet.");
+          } catch (walletError) {
+            console.error('Wallet browser error:', walletError);
+            setError("Wallet connection failed. Please try again or switch to Sepolia network.");
             setConnecting(false);
             return;
           }
         } else {
-          // No MetaMask available on mobile
-          setError("No wallet detected. Please open this DApp in your wallet's built-in browser (MetaMask, Trust Wallet, etc.).");
+          // Not in a wallet browser - show instructions
+          setError("Please open this DApp in your wallet's built-in browser (MetaMask, Trust Wallet, etc.) for the best experience.");
           setConnecting(false);
           return;
         }
@@ -1934,7 +1942,9 @@ function App() {
             fontSize: 17, 
             color: '#b8c1ec', 
             marginTop: 10, 
-            textAlign: 'center'
+            textAlign: 'center',
+            paddingLeft: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '24px' : '0',
+            paddingRight: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '24px' : '0'
           }}>
             In a Holacracy, all authority derives from the <a href="https://www.holacracy.org/constitution/5-0/" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>Constitution</a>, not from individuals.
           </div>
