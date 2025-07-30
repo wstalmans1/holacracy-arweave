@@ -13,5 +13,18 @@ yarn-error.log*
 hardhat/
 scripts-root/
 test/
+subgraph/
 *.md
-!README.md 
+!README.md
+build.sh
+arweave-manifest.json
+deploy-dapp.js
+arweave-key.json
+upload-to-arweave.js
+DEPLOYMENT_OPTIONS.md
+ARWEAVE_DEPLOYMENT_GUIDE.md
+deploy-simple.js
+arweave-wallet.json
+OPTIMIZED_DEPLOYMENT_README.md
+POST_DEPLOYMENT_CHECKLIST.md
+AI conversation from projects_and_roles.md 
