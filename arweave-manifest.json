@@ -1,0 +1,104 @@
+{
+  "manifest": "arweave/paths",
+  "version": "0.1.0",
+  "index": {
+    "path": "index.html"
+  },
+  "paths": {
+    "/asset-manifest.json": {
+      "id": "placeholder",
+      "size": 712,
+      "contentType": "application/json"
+    },
+    "/favicon.ico": {
+      "id": "placeholder",
+      "size": 3870,
+      "contentType": "image/x-icon"
+    },
+    "/index.html": {
+      "id": "placeholder",
+      "size": 644,
+      "contentType": "text/html"
+    },
+    "/logo192.png": {
+      "id": "placeholder",
+      "size": 5347,
+      "contentType": "image/png"
+    },
+    "/logo512.png": {
+      "id": "placeholder",
+      "size": 9664,
+      "contentType": "image/png"
+    },
+    "/manifest.json": {
+      "id": "placeholder",
+      "size": 492,
+      "contentType": "application/json"
+    },
+    "/robots.txt": {
+      "id": "placeholder",
+      "size": 67,
+      "contentType": "text/plain"
+    },
+    "/service-worker.js": {
+      "id": "placeholder",
+      "size": 24766,
+      "contentType": "application/javascript"
+    },
+    "/service-worker.js.map": {
+      "id": "placeholder",
+      "size": 199196,
+      "contentType": "application/octet-stream"
+    },
+    "/static/css/main.e4e580a6.css": {
+      "id": "placeholder",
+      "size": 1150,
+      "contentType": "text/css"
+    },
+    "/static/css/main.e4e580a6.css.map": {
+      "id": "placeholder",
+      "size": 2224,
+      "contentType": "application/octet-stream"
+    },
+    "/static/js/463.dfb6d1bc.chunk.js": {
+      "id": "placeholder",
+      "size": 118820,
+      "contentType": "application/javascript"
+    },
+    "/static/js/463.dfb6d1bc.chunk.js.LICENSE.txt": {
+      "id": "placeholder",
+      "size": 88,
+      "contentType": "text/plain"
+    },
+    "/static/js/463.dfb6d1bc.chunk.js.map": {
+      "id": "placeholder",
+      "size": 411686,
+      "contentType": "application/octet-stream"
+    },
+    "/static/js/488.607dd935.chunk.js": {
+      "id": "placeholder",
+      "size": 6446,
+      "contentType": "application/javascript"
+    },
+    "/static/js/488.607dd935.chunk.js.map": {
+      "id": "placeholder",
+      "size": 14741,
+      "contentType": "application/octet-stream"
+    },
+    "/static/js/main.9fa4ff4c.js": {
+      "id": "placeholder",
+      "size": 564952,
+      "contentType": "application/javascript"
+    },
+    "/static/js/main.9fa4ff4c.js.LICENSE.txt": {
+      "id": "placeholder",
+      "size": 1043,
+      "contentType": "text/plain"
+    },
+    "/static/js/main.9fa4ff4c.js.map": {
+      "id": "placeholder",
+      "size": 1847492,
+      "contentType": "application/octet-stream"
+    }
+  }
+}
