@@ -1989,26 +1989,51 @@ function App() {
           }}>
             {account ? (
               <span
-                style={{ color: '#4ecdc4', background: '#232946', border: '1px solid #4ecdc4', borderRadius: 8, padding: '6px 14px', fontWeight: 600, fontSize: 15, fontFamily: 'monospace', position: 'relative', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}
+                style={{ 
+                  color: '#4ecdc4', 
+                  background: '#232946', 
+                  border: '1px solid #4ecdc4', 
+                  borderRadius: 8, 
+                  padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '6px 10px' : '6px 14px', 
+                  fontWeight: 600, 
+                  fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 13 : 15, 
+                  fontFamily: 'monospace', 
+                  position: 'relative', 
+                  cursor: 'pointer', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 6 : 10
+                }}
                 onMouseEnter={showWalletTooltip}
                 onMouseLeave={hideWalletTooltip}
                 tabIndex={0}
                 aria-label="Wallet address"
               >
-                Connected wallet:
+                {/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'Wallet:' : 'Connected wallet:'}
                 {ensName ? (
                   <span style={{ color: '#fff', fontWeight: 600, marginLeft: 6 }}>{ensName}</span>
                 ) : (
-                  <span style={{ color: '#fff', fontWeight: 600, marginLeft: 6 }}>{account.slice(0, 6)}...{account.slice(-4)}</span>
+                  <span style={{ color: '#fff', fontWeight: 600, marginLeft: 6 }}>
+                    {/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 
+                      `${account.slice(0, 4)}...${account.slice(-3)}` : 
+                      `${account.slice(0, 6)}...${account.slice(-4)}`
+                    }
+                  </span>
                 )}
                 {balance !== null && (
-                  <span style={{ color: '#b8c1ec', fontWeight: 400, marginLeft: 8, fontSize: 14 }}>
-                    {parseFloat(balance).toFixed(4)} ETH
+                  <span style={{ color: '#b8c1ec', fontWeight: 400, marginLeft: 8, fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 12 : 14 }}>
+                    {/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 
+                      `${parseFloat(balance).toFixed(2)} ETH` : 
+                      `${parseFloat(balance).toFixed(4)} ETH`
+                    }
                   </span>
                 )}
                 {networkName && (
-                  <span style={{ color: '#b8c1ec', fontWeight: 400, marginLeft: 8, fontSize: 14 }}>
-                    {networkName}
+                  <span style={{ color: '#b8c1ec', fontWeight: 400, marginLeft: 8, fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 12 : 14 }}>
+                    {/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 
+                      networkName.replace('Sepolia', 'Sep') : 
+                      networkName
+                    }
                   </span>
                 )}
                 {walletTooltipVisible && (
