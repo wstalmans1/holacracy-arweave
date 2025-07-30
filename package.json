@@ -3,13 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@walletconnect/ethereum-provider": "^2.10.0",
+    "arweave": "^1.15.7",
     "cra-template-pwa": "2.0.0",
     "ethers": "^6.15.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-scripts": "5.0.1",
-    "web-vitals": "^5.0.3",
-    "arweave": "^1.15.7"
+    "web-vitals": "^5.0.3"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -35,7 +36,12 @@
       "last 1 safari version"
     ]
   },
-  "keywords": ["holacracy", "dapp", "arweave", "ethereum"],
+  "keywords": [
+    "holacracy",
+    "dapp",
+    "arweave",
+    "ethereum"
+  ],
   "author": "",
   "license": "ISC",
   "description": "Holacracy DApp for organization creation and management on Ethereum"

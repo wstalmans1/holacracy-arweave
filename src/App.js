@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ethers } from 'ethers';
+
 import factoryArtifact from "./abis/HolacracyFactory-optimized.json";
 import orgArtifact from "./abis/Organization-optimized.json";
 import TransactionPendingOverlay from './TransactionPendingOverlay';
@@ -1032,21 +1033,48 @@ function App() {
     setError("");
     setConnecting(true);
     try {
+      // Check if we're on mobile
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
       if (window.ethereum) {
         const prov = new ethers.BrowserProvider(window.ethereum);
         const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
         setAccount(accs[0]);
         const net = await prov.getNetwork();
         if (net.chainId.toString() !== SEPOLIA_CHAIN_ID) {
-          setError("Please switch to the Sepolia network in MetaMask.");
+          setError("Please switch to the Sepolia network in your wallet.");
           setConnecting(false);
           return;
         }
         const sign = await prov.getSigner();
         const fac = new ethers.Contract(addresses.HOLACRACY_FACTORY, getAbiArray(factoryArtifact), sign);
         setFactory(fac);
+      } else if (isMobile) {
+        // Mobile-specific wallet detection
+        const mobileWallets = [
+          'metamask',
+          'trust',
+          'coinbase',
+          'rainbow',
+          'argent',
+          'imtoken'
+        ];
+        
+        let walletFound = false;
+        for (const wallet of mobileWallets) {
+          if (window[wallet] || window.ethereum) {
+            walletFound = true;
+            break;
+          }
+        }
+        
+        if (!walletFound) {
+          setError("No mobile wallet detected. Please install MetaMask Mobile, Trust Wallet, or another Web3 wallet.");
+        } else {
+          setError("Wallet detected but connection failed. Please try opening this DApp in your wallet's browser.");
+        }
       } else {
-        setError("MetaMask not detected. Please install MetaMask.");
+        setError("No wallet detected. Please install MetaMask or another Web3 wallet.");
       }
     } catch (e) {
       setError("Failed to connect wallet: " + (e?.message || e));
@@ -1900,12 +1928,25 @@ function App() {
                 )}
               </span>
             ) : (
-              <button
-                style={{ background: '#4ecdc4', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 22px', fontWeight: 600, fontSize: 15, cursor: 'pointer' }}
-                onClick={connectWallet}
-              >
-                Connect Wallet
-              </button>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                <button
+                  style={{ background: '#4ecdc4', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 22px', fontWeight: 600, fontSize: 15, cursor: 'pointer' }}
+                  onClick={connectWallet}
+                >
+                  Connect Wallet
+                </button>
+                {/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && (
+                  <div style={{ 
+                    fontSize: '11px', 
+                    color: '#b8c1ec', 
+                    textAlign: 'center', 
+                    maxWidth: '200px',
+                    lineHeight: '1.3'
+                  }}>
+                    💡 Mobile tip: Open this DApp in your wallet's browser (MetaMask, Trust Wallet, etc.)
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>
