@@ -3,12 +3,14 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "build": "cd frontend && npm install && npm run build",
+    "start": "cd frontend && npm start",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
+  "keywords": ["holacracy", "dapp", "arweave", "ethereum"],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "Holacracy DApp for organization creation and management on Ethereum",
   "dependencies": {
     "arweave": "^1.15.7"
   }
