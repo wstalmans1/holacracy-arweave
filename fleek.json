@@ -1,13 +1,6 @@
 {
-  "$schema": "https://json.schemastore.org/fleek.json",
   "build": {
     "command": "npm run build",
-    "outputDirectory": "frontend/build",
-    "environment": {
-      "NODE_VERSION": "18"
-    }
-  },
-  "deploy": {
-    "targets": ["ipfs", "arweave"]
+    "outputDirectory": "frontend/build"
   }
 } 
