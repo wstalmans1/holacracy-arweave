@@ -1,6 +1,6 @@
 {
   "build": {
-    "command": "chmod +x build.sh && ./build.sh",
+    "command": "npm run build",
     "outputDirectory": "dist"
   }
 } 
