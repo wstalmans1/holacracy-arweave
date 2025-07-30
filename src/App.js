@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ethers } from 'ethers';
+import { EthereumProvider } from '@walletconnect/ethereum-provider';
 
 import factoryArtifact from "./abis/HolacracyFactory-optimized.json";
 import orgArtifact from "./abis/Organization-optimized.json";
@@ -913,6 +914,8 @@ function App() {
   const [createOrgModalOpen, setCreateOrgModalOpen] = useState(false);
   const [createOrgModalSuccess, setCreateOrgModalSuccess] = useState("");
   const [infoModalOpen, setInfoModalOpen] = useState(false);
+  // eslint-disable-next-line no-unused-vars
+  const [walletConnectProvider, setWalletConnectProvider] = useState(null);
   const nameInputRef = React.useRef();
   const purposeInputRef = React.useRef();
   const createOrgNameInputRef = React.useRef();
@@ -1033,9 +1036,7 @@ function App() {
     setError("");
     setConnecting(true);
     try {
-      // Check if we're on mobile
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      
+      // Try MetaMask first
       if (window.ethereum) {
         const prov = new ethers.BrowserProvider(window.ethereum);
         const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
@@ -1049,34 +1050,45 @@ function App() {
         const sign = await prov.getSigner();
         const fac = new ethers.Contract(addresses.HOLACRACY_FACTORY, getAbiArray(factoryArtifact), sign);
         setFactory(fac);
-      } else if (isMobile) {
-        // Mobile-specific wallet detection
-        const mobileWallets = [
-          'metamask',
-          'trust',
-          'coinbase',
-          'rainbow',
-          'argent',
-          'imtoken'
-        ];
-        
-        let walletFound = false;
-        for (const wallet of mobileWallets) {
-          if (window[wallet] || window.ethereum) {
-            walletFound = true;
-            break;
-          }
-        }
-        
-        if (!walletFound) {
-          setError("No mobile wallet detected. Please install MetaMask Mobile, Trust Wallet, or another Web3 wallet.");
-        } else {
-          setError("Wallet detected but connection failed. Please try opening this DApp in your wallet's browser.");
-        }
       } else {
-        setError("No wallet detected. Please install MetaMask or another Web3 wallet.");
+        // Use WalletConnect as fallback
+        try {
+          const provider = await EthereumProvider.init({
+            projectId: 'c4f79cc821944d9680842e34466bfbd9', // Public test project ID
+            chains: [11155111], // Sepolia chain ID
+            showQrModal: true,
+            metadata: {
+              name: 'Holacracy DApp',
+              description: 'Holacracy Organization Creation & Participation DApp',
+              url: window.location.host,
+              icons: ['https://raw.githubusercontent.com/WalletConnect/walletconnect-assets/master/Logo/Blue%20(Default)/Logo.svg']
+            }
+          });
+          
+          await provider.connect();
+          setWalletConnectProvider(provider);
+          
+          const ethersProvider = new ethers.BrowserProvider(provider);
+          const accounts = await ethersProvider.listAccounts();
+          setAccount(accounts[0].address);
+          
+          const net = await ethersProvider.getNetwork();
+          if (net.chainId.toString() !== SEPOLIA_CHAIN_ID) {
+            setError("Please switch to the Sepolia network in your wallet.");
+            setConnecting(false);
+            return;
+          }
+          
+          const sign = await ethersProvider.getSigner();
+          const fac = new ethers.Contract(addresses.HOLACRACY_FACTORY, getAbiArray(factoryArtifact), sign);
+          setFactory(fac);
+        } catch (wcError) {
+          console.error('WalletConnect error:', wcError);
+          setError("Failed to connect with WalletConnect. Please try again or use MetaMask.");
+        }
       }
     } catch (e) {
+      console.error('Wallet connection error:', e);
       setError("Failed to connect wallet: " + (e?.message || e));
     }
     setConnecting(false);
@@ -1943,7 +1955,7 @@ function App() {
                     maxWidth: '200px',
                     lineHeight: '1.3'
                   }}>
-                    💡 Mobile tip: Open this DApp in your wallet's browser (MetaMask, Trust Wallet, etc.)
+                    💡 Mobile tip: Use WalletConnect to connect any mobile wallet
                   </div>
                 )}
               </div>
