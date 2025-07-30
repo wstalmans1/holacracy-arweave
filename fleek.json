@@ -1,6 +1,6 @@
 {
   "build": {
-    "command": "cd frontend && npm install && npm run build",
-    "outputDirectory": "frontend/build"
+    "command": "cd frontend && npm install && npm run build && cd .. && mkdir -p dist && cp -r frontend/build/* dist/",
+    "outputDirectory": "dist"
   }
 } 
