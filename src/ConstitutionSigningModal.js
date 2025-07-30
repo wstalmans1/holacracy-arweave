@@ -202,15 +202,15 @@ I understand that in a Holacracy, all authority derives from the Constitution, n
         borderRadius: 12,
         maxWidth: '800px',
         width: '100%',
-        maxHeight: '90vh',
+        maxHeight: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '95vh' : '90vh',
         display: 'flex',
         flexDirection: 'column',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-        margin: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '16px' : '0'
+        margin: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '8px' : '0'
       }}>
         {/* Header */}
         <div style={{
-          padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '20px 16px 12px 16px' : '24px 32px 16px 32px',
+          padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '16px 12px 8px 12px' : '24px 32px 16px 32px',
           borderBottom: '1px solid #e3eaf2',
           display: 'flex',
           justifyContent: 'space-between',
@@ -218,7 +218,7 @@ I understand that in a Holacracy, all authority derives from the Constitution, n
         }}>
           <h2 style={{
             margin: 0,
-            fontSize: '24px',
+            fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '20px' : '24px',
             fontWeight: '700',
             color: '#232946'
           }}>
@@ -261,18 +261,20 @@ I understand that in a Holacracy, all authority derives from the Constitution, n
               {/* Constitution Display */}
               <div style={{
                 flex: 1,
-                padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '16px' : '24px 32px',
+                padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '12px' : '24px 32px',
                 overflow: 'hidden'
               }}>
                 <div style={{
-                  marginBottom: '16px',
+                  marginBottom: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '12px' : '16px',
                   display: 'flex',
                   justifyContent: 'space-between',
-                  alignItems: 'center'
+                  alignItems: 'center',
+                  flexWrap: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'wrap' : 'nowrap',
+                  gap: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '8px' : '0'
                 }}>
                   <h3 style={{
                     margin: 0,
-                    fontSize: '18px',
+                    fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '16px' : '18px',
                     fontWeight: '600',
                     color: '#232946'
                   }}>
@@ -285,24 +287,24 @@ I understand that in a Holacracy, all authority derives from the Constitution, n
                       color: '#fff',
                       border: 'none',
                       borderRadius: '6px',
-                      padding: '8px 16px',
-                      fontSize: '14px',
+                      padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '6px 12px' : '8px 16px',
+                      fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '12px' : '14px',
                       fontWeight: '600',
                       cursor: 'pointer'
                     }}
                   >
-                    {showFullConstitution ? 'Show Summary' : 'Show Full Constitution'}
+                    {showFullConstitution ? 'Summary' : 'Full Text'}
                   </button>
                 </div>
 
                 <div style={{
-                  height: showFullConstitution ? (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '300px' : '400px') : (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '150px' : '200px'),
+                  height: showFullConstitution ? (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '350px' : '400px') : (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '200px' : '200px'),
                   overflow: 'auto',
                   border: '1px solid #e3eaf2',
                   borderRadius: '8px',
-                  padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '12px' : '16px',
+                  padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '10px' : '16px',
                   background: '#f7fafd',
-                  fontSize: '14px',
+                  fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '13px' : '14px',
                   lineHeight: '1.6',
                   color: '#232946'
                 }} onScroll={handleScroll}>
@@ -329,19 +331,19 @@ I understand that in a Holacracy, all authority derives from the Constitution, n
 
               {/* Consent Section */}
               <div style={{
-                padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '12px 16px' : '16px 32px',
+                padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '10px 12px' : '16px 32px',
                 borderTop: '1px solid #e3eaf2',
                 background: '#f7fafd'
               }}>
                 <div style={{
-                  marginBottom: '16px'
+                  marginBottom: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '12px' : '16px'
                 }}>
                   <label style={{
                     display: 'flex',
                     alignItems: 'flex-start',
                     gap: '12px',
                     cursor: 'pointer',
-                    fontSize: '14px',
+                    fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '13px' : '14px',
                     lineHeight: '1.5'
                   }}>
                     <input
@@ -360,14 +362,14 @@ I understand that in a Holacracy, all authority derives from the Constitution, n
                 </div>
 
                 <div style={{
-                  marginBottom: '16px'
+                  marginBottom: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '12px' : '16px'
                 }}>
                   <label style={{
                     display: 'flex',
                     alignItems: 'flex-start',
                     gap: '12px',
                     cursor: 'pointer',
-                    fontSize: '14px',
+                    fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '13px' : '14px',
                     lineHeight: '1.5'
                   }}>
                     <input
@@ -387,10 +389,10 @@ I understand that in a Holacracy, all authority derives from the Constitution, n
                 </div>
 
                 <div style={{
-                  padding: '12px',
+                  padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '10px' : '12px',
                   background: '#e3eaf2',
                   borderRadius: '6px',
-                  fontSize: '13px',
+                  fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '12px' : '13px',
                   color: '#4a5568',
                   lineHeight: '1.4'
                 }}>
@@ -405,11 +407,11 @@ I understand that in a Holacracy, all authority derives from the Constitution, n
 
         {/* Footer */}
         <div style={{
-          padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '16px' : '24px 32px',
+          padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '12px' : '24px 32px',
           borderTop: '1px solid #e3eaf2',
           display: 'flex',
           justifyContent: 'flex-end',
-          gap: '12px'
+          gap: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '8px' : '12px'
         }}>
           <button
             onClick={onClose}
@@ -417,8 +419,8 @@ I understand that in a Holacracy, all authority derives from the Constitution, n
               background: 'none',
               border: '1px solid #e3eaf2',
               borderRadius: '6px',
-              padding: '12px 24px',
-              fontSize: '14px',
+              padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '10px 16px' : '12px 24px',
+              fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '13px' : '14px',
               fontWeight: '600',
               cursor: 'pointer',
               color: '#4a5568'
@@ -435,8 +437,8 @@ I understand that in a Holacracy, all authority derives from the Constitution, n
               color: hasReadConstitution && explicitConsent && !signingPending ? '#fff' : '#888',
               border: 'none',
               borderRadius: '6px',
-              padding: '12px 24px',
-              fontSize: '14px',
+              padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '10px 16px' : '12px 24px',
+              fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '13px' : '14px',
               fontWeight: '600',
               cursor: hasReadConstitution && explicitConsent && !signingPending ? 'pointer' : 'not-allowed'
             }}
