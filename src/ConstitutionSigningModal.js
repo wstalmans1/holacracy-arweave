@@ -13,24 +13,14 @@ const ConstitutionSigningModal = ({
 }) => {
   const [hasReadConstitution, setHasReadConstitution] = useState(false);
   const [explicitConsent, setExplicitConsent] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [scrollPosition, setScrollPosition] = useState(0);
 
   // Reset state when modal opens
   useEffect(() => {
     if (open) {
       setHasReadConstitution(false);
       setExplicitConsent(false);
-      setScrollPosition(0);
-      setLoading(false);
     }
   }, [open]);
-
-  const handleScroll = (e) => {
-    const { scrollTop, scrollHeight, clientHeight } = e.target;
-    const scrollPercentage = (scrollTop / (scrollHeight - clientHeight)) * 100;
-    setScrollPosition(scrollPercentage);
-  };
 
   const createDigitalSignature = async () => {
     try {
@@ -132,7 +122,7 @@ const ConstitutionSigningModal = ({
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      zIndex: 1000,
+      zIndex: 2000,
       padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '8px' : '0'
     }}>
       <div style={{
@@ -165,6 +155,15 @@ const ConstitutionSigningModal = ({
           }}>
             Sign Holacracy Constitution
           </h2>
+          <p style={{
+            margin: '8px 0 0 0',
+            color: '#b8c1ec',
+            fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '14px' : '16px',
+            textAlign: 'center',
+            fontFamily: 'monospace'
+          }}>
+            for the organisation under contract address {org?.address || 'Loading...'}
+          </p>
         </div>
 
         {/* Main content area - Full height scrolling container */}
@@ -233,7 +232,10 @@ const ConstitutionSigningModal = ({
                     }}
                   />
                   <span>
-                    I confirm that I have read and understood the complete Holacracy Constitution v5.0 above.
+                    I confirm that I have read and understood the complete Holacracy Constitution v5.0 above. By signing this constitution, I consent to entering into a binding agreement to operate within the Holacracy governance framework for the Holacracy Organisation under contract address{' '}
+                    <span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#4ecdc4' }}>
+                      {org?.address || 'Loading...'}
+                    </span>. This signature is recorded on the blockchain and is legally enforceable.
                   </span>
                 </label>
 
@@ -276,19 +278,6 @@ const ConstitutionSigningModal = ({
                     I understand that in a Holacracy, all authority derives from the Constitution, not from individuals.
                   </span>
                 </label>
-              </div>
-
-              {/* Legal Notice */}
-              <div style={{
-                padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '10px' : '12px',
-                fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '12px' : '13px',
-                backgroundColor: '#1a1f2e',
-                borderRadius: 8,
-                border: '1px solid #4a5568',
-                color: '#a0aec0',
-                marginBottom: '24px'
-              }}>
-                <strong>Legal Notice:</strong> By signing this constitution, you are entering into a binding agreement to operate within the Holacracy governance framework. This signature is recorded on the blockchain and is legally enforceable.
               </div>
             </div>
           </div>
