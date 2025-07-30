@@ -399,7 +399,6 @@ function OrganizationDetailsOverlay({ org, open, onClose, account, loadOrgs, Org
                   alignItems: 'center',
                   gap: '6px'
                 }}>
-                  <span>{addr}</span>
                   {addr.toLowerCase() === account?.toLowerCase() && (
                     <span style={{ 
                       fontSize: '11px', 
@@ -411,6 +410,7 @@ function OrganizationDetailsOverlay({ org, open, onClose, account, loadOrgs, Org
                       You
                     </span>
                   )}
+                  <span>{addr}</span>
                 </div>
               ))
             )}
@@ -432,24 +432,47 @@ function OrganizationDetailsOverlay({ org, open, onClose, account, loadOrgs, Org
           }}>
             Organization Details
           </h3>
-          <div style={{ fontSize: '11px', color: '#6b7280', lineHeight: '1.4' }}>
-            <div style={{ marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <strong>Creator:</strong> 
-              <span>{org.creator}</span>
+          <div style={{ 
+            fontSize: '11px', 
+            color: '#6b7280', 
+            lineHeight: '1.4',
+            overflowX: 'auto',
+            whiteSpace: 'nowrap',
+            paddingBottom: '4px'
+          }}>
+            <div style={{ 
+              marginBottom: '4px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '6px',
+              whiteSpace: 'nowrap'
+            }}>
+              <strong style={{ flexShrink: 0 }}>Creator:</strong> 
+              <span style={{ 
+                fontFamily: 'monospace',
+                fontSize: '11px'
+              }}>{org.creator}</span>
               {account && org.creator.toLowerCase() === account.toLowerCase() && (
                 <span style={{ 
                   fontSize: '9px', 
                   color: '#fff',
                   background: '#6b7280',
                   padding: '1px 4px',
-                  borderRadius: '3px'
+                  borderRadius: '3px',
+                  flexShrink: 0
                 }}>
                   You
                 </span>
               )}
             </div>
-            <div style={{ marginBottom: '4px' }}>
-              <strong>Contract Address:</strong> 
+            <div style={{ 
+              marginBottom: '4px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '6px',
+              whiteSpace: 'nowrap'
+            }}>
+              <strong style={{ flexShrink: 0 }}>Contract:</strong> 
               <a 
                 href={`https://sepolia.etherscan.io/address/${org.address}`} 
                 target="_blank" 
@@ -457,7 +480,8 @@ function OrganizationDetailsOverlay({ org, open, onClose, account, loadOrgs, Org
                 style={{ 
                   color: '#4ecdc4', 
                   textDecoration: 'underline',
-                  marginLeft: '4px'
+                  fontFamily: 'monospace',
+                  fontSize: '11px'
                 }}
               >
                 {org.address}
@@ -1045,14 +1069,14 @@ function App() {
       if (isMobile) {
         console.log('Mobile detected, using simplified connection...');
         
-        // Check if we're in a wallet's browser
+        // Check if we're in a wallet's browser (exclude Brave Wallet)
         const isInWalletBrowser = window.ethereum && (
           window.ethereum.isMetaMask || 
           window.ethereum.isTrust || 
           window.ethereum.isCoinbaseWallet ||
           window.ethereum.isTokenPocket ||
           window.ethereum.isImToken
-        );
+        ) && !window.ethereum.isBraveWallet;
         
         if (isInWalletBrowser) {
           try {
@@ -1078,12 +1102,18 @@ function App() {
             setConnecting(false);
             return;
           }
-        } else {
-          // Not in a wallet browser - show instructions
-          setError("Please open this DApp in your wallet's built-in browser (MetaMask, Trust Wallet, etc.) for the best experience.");
-          setConnecting(false);
-          return;
-        }
+                  } else {
+            // Not in a wallet browser - show instructions
+            if (window.ethereum && window.ethereum.isBraveWallet) {
+              setError("Brave Wallet detected. Please open this DApp in MetaMask or another wallet's browser for the best experience.");
+            } else if (window.ethereum) {
+              setError("Unsupported wallet detected. Please open this DApp in MetaMask, Trust Wallet, or Coinbase Wallet browser.");
+            } else {
+              setError("No wallet detected. Please open this DApp in your wallet's built-in browser (MetaMask, Trust Wallet, etc.) for the best experience.");
+            }
+            setConnecting(false);
+            return;
+          }
       } else {
         // On desktop, try MetaMask first
         if (window.ethereum) {
@@ -1948,7 +1978,15 @@ function App() {
           }}>
             In a Holacracy, all authority derives from the <a href="https://www.holacracy.org/constitution/5-0/" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>Constitution</a>, not from individuals.
           </div>
-          <div style={{ marginTop: 18, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12 }}>
+          <div style={{ 
+            marginTop: 18, 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            gap: 12,
+            paddingLeft: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '16px' : '0',
+            paddingRight: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '16px' : '0'
+          }}>
             {account ? (
               <span
                 style={{ color: '#4ecdc4', background: '#232946', border: '1px solid #4ecdc4', borderRadius: 8, padding: '6px 14px', fontWeight: 600, fontSize: 15, fontFamily: 'monospace', position: 'relative', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}

@@ -205,11 +205,12 @@ I understand that in a Holacracy, all authority derives from the Constitution, n
         maxHeight: '90vh',
         display: 'flex',
         flexDirection: 'column',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+        margin: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '16px' : '0'
       }}>
         {/* Header */}
         <div style={{
-          padding: '24px 32px 16px 32px',
+          padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '20px 16px 12px 16px' : '24px 32px 16px 32px',
           borderBottom: '1px solid #e3eaf2',
           display: 'flex',
           justifyContent: 'space-between',
@@ -260,7 +261,7 @@ I understand that in a Holacracy, all authority derives from the Constitution, n
               {/* Constitution Display */}
               <div style={{
                 flex: 1,
-                padding: '24px 32px',
+                padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '16px' : '24px 32px',
                 overflow: 'hidden'
               }}>
                 <div style={{
@@ -295,11 +296,11 @@ I understand that in a Holacracy, all authority derives from the Constitution, n
                 </div>
 
                 <div style={{
-                  height: showFullConstitution ? '400px' : '200px',
+                  height: showFullConstitution ? (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '300px' : '400px') : (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '150px' : '200px'),
                   overflow: 'auto',
                   border: '1px solid #e3eaf2',
                   borderRadius: '8px',
-                  padding: '16px',
+                  padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '12px' : '16px',
                   background: '#f7fafd',
                   fontSize: '14px',
                   lineHeight: '1.6',
@@ -328,7 +329,7 @@ I understand that in a Holacracy, all authority derives from the Constitution, n
 
               {/* Consent Section */}
               <div style={{
-                padding: '16px 32px',
+                padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '12px 16px' : '16px 32px',
                 borderTop: '1px solid #e3eaf2',
                 background: '#f7fafd'
               }}>
@@ -404,7 +405,7 @@ I understand that in a Holacracy, all authority derives from the Constitution, n
 
         {/* Footer */}
         <div style={{
-          padding: '24px 32px',
+          padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '16px' : '24px 32px',
           borderTop: '1px solid #e3eaf2',
           display: 'flex',
           justifyContent: 'flex-end',
