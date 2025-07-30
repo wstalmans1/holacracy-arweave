@@ -31,7 +31,7 @@ const styles = {
   header: {
     background: '#232946',
     color: '#fff',
-    padding: '32px 0 18px 0',
+    padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '32px 16px 18px 16px' : '32px 0 18px 0',
     textAlign: 'center',
     fontWeight: 700,
     fontSize: 32,
@@ -51,11 +51,11 @@ const styles = {
   },
   section: {
     maxWidth: 800,
-    margin: '16px auto 32px auto',
+    margin: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '8px 12px 32px 12px' : '16px auto 32px auto',
     background: '#fff',
     borderRadius: 12,
     boxShadow: '0 2px 12px rgba(44,62,80,0.07)',
-    padding: '32px 32px 32px 32px',
+    padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '24px 16px 24px 16px' : '32px 32px 32px 32px',
   },
   label: {
     fontWeight: 600,
@@ -1036,23 +1036,13 @@ function App() {
     setError("");
     setConnecting(true);
     try {
-      // Try MetaMask first
-      if (window.ethereum) {
-        const prov = new ethers.BrowserProvider(window.ethereum);
-        const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        setAccount(accs[0]);
-        const net = await prov.getNetwork();
-        if (net.chainId.toString() !== SEPOLIA_CHAIN_ID) {
-          setError("Please switch to the Sepolia network in your wallet.");
-          setConnecting(false);
-          return;
-        }
-        const sign = await prov.getSigner();
-        const fac = new ethers.Contract(addresses.HOLACRACY_FACTORY, getAbiArray(factoryArtifact), sign);
-        setFactory(fac);
-      } else {
-        // Use WalletConnect as fallback
+      // Check if we're on mobile
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      // On mobile, prefer WalletConnect for better compatibility
+      if (isMobile) {
         try {
+          console.log('Mobile detected, using WalletConnect...');
           const provider = await EthereumProvider.init({
             projectId: 'c4f79cc821944d9680842e34466bfbd9', // Public test project ID
             chains: [11155111], // Sepolia chain ID
@@ -1085,6 +1075,58 @@ function App() {
         } catch (wcError) {
           console.error('WalletConnect error:', wcError);
           setError("Failed to connect with WalletConnect. Please try again or use MetaMask.");
+        }
+      } else {
+        // On desktop, try MetaMask first
+        if (window.ethereum) {
+          const prov = new ethers.BrowserProvider(window.ethereum);
+          const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          setAccount(accs[0]);
+          const net = await prov.getNetwork();
+          if (net.chainId.toString() !== SEPOLIA_CHAIN_ID) {
+            setError("Please switch to the Sepolia network in your wallet.");
+            setConnecting(false);
+            return;
+          }
+          const sign = await prov.getSigner();
+          const fac = new ethers.Contract(addresses.HOLACRACY_FACTORY, getAbiArray(factoryArtifact), sign);
+          setFactory(fac);
+        } else {
+          // Desktop fallback to WalletConnect
+          try {
+            const provider = await EthereumProvider.init({
+              projectId: 'c4f79cc821944d9680842e34466bfbd9',
+              chains: [11155111],
+              showQrModal: true,
+              metadata: {
+                name: 'Holacracy DApp',
+                description: 'Holacracy Organization Creation & Participation DApp',
+                url: window.location.host,
+                icons: ['https://raw.githubusercontent.com/WalletConnect/walletconnect-assets/master/Logo/Blue%20(Default)/Logo.svg']
+              }
+            });
+            
+            await provider.connect();
+            setWalletConnectProvider(provider);
+            
+            const ethersProvider = new ethers.BrowserProvider(provider);
+            const accounts = await ethersProvider.listAccounts();
+            setAccount(accounts[0].address);
+            
+            const net = await ethersProvider.getNetwork();
+            if (net.chainId.toString() !== SEPOLIA_CHAIN_ID) {
+              setError("Please switch to the Sepolia network in your wallet.");
+              setConnecting(false);
+              return;
+            }
+            
+            const sign = await ethersProvider.getSigner();
+            const fac = new ethers.Contract(addresses.HOLACRACY_FACTORY, getAbiArray(factoryArtifact), sign);
+            setFactory(fac);
+          } catch (wcError) {
+            console.error('WalletConnect error:', wcError);
+            setError("Failed to connect with WalletConnect. Please try again or use MetaMask.");
+          }
         }
       }
     } catch (e) {
@@ -1947,17 +1989,17 @@ function App() {
                 >
                   Connect Wallet
                 </button>
-                {/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && (
-                  <div style={{ 
-                    fontSize: '11px', 
-                    color: '#b8c1ec', 
-                    textAlign: 'center', 
-                    maxWidth: '200px',
-                    lineHeight: '1.3'
-                  }}>
-                    💡 Mobile tip: Use WalletConnect to connect any mobile wallet
-                  </div>
-                )}
+                                  {/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && (
+                    <div style={{ 
+                      fontSize: '11px', 
+                      color: '#b8c1ec', 
+                      textAlign: 'center', 
+                      maxWidth: '200px',
+                      lineHeight: '1.3'
+                    }}>
+                      💡 Mobile: Will use WalletConnect for better compatibility
+                    </div>
+                  )}
               </div>
             )}
           </div>
@@ -2007,9 +2049,35 @@ function App() {
         onClose={() => setInfoModalOpen(false)}
       />
       <div style={styles.section}>
-        <div style={{ display: 'flex', alignItems: 'center', minHeight: 24, justifyContent: 'space-between', marginBottom: 20, marginTop: 8, position: 'relative' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ color: '#232946', fontSize: 22, fontWeight: 700, display: 'flex', alignItems: 'center', height: 22 }}>Holacracy Organizations</span>
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          minHeight: 24, 
+          justifyContent: 'space-between', 
+          marginBottom: 20, 
+          marginTop: 8, 
+          position: 'relative',
+          flexWrap: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'wrap' : 'nowrap',
+          gap: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '8px' : '0',
+          paddingLeft: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '8px' : '0',
+          paddingRight: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '8px' : '0'
+        }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 6
+          }}>
+            <span style={{ 
+              color: '#232946', 
+              fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 18 : 22, 
+              fontWeight: 700, 
+              display: 'flex', 
+              alignItems: 'center', 
+              height: 22,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}>Holacracy Organizations</span>
             <button
               onClick={() => setInfoModalOpen(true)}
               style={{ background: 'none', border: 'none', color: '#4ecdc4', fontWeight: 600, fontSize: 14, cursor: 'pointer', textAlign: 'left', outline: 'none', display: 'flex', alignItems: 'center', gap: 6, margin: 0, padding: 0 }}
@@ -2023,9 +2091,10 @@ function App() {
               alignItems: 'center', 
               gap: 4, 
               cursor: 'pointer',
-              fontSize: '12px',
+              fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '11px' : '12px',
               color: '#9ca3af',
-              fontWeight: '400'
+              fontWeight: '400',
+              whiteSpace: 'nowrap'
             }}>
               <input
                 type="checkbox"
@@ -2118,45 +2187,48 @@ function App() {
               })
             }}>
               <div
-                style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', padding: '4px 0' }}
+                style={{ display: 'flex', alignItems: 'flex-start', cursor: 'pointer', padding: '8px 0' }}
                 onClick={() => {
                   setSelectedOrg(org);
                   setOrgDetailsOverlayOpen(true);
                 }}
               >
                 <div style={{ flex: 1, minWidth: 0, paddingLeft: 12 }}>
-                  <div style={{ fontSize: 14, color: '#232946', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    <span style={{ fontWeight: 600 }}>{org.onChainDetails ? org.onChainDetails.name : org.name}</span>
-                    {org.archived && (
-                      <span style={{ 
-                        background: '#dc2626', 
-                        color: '#ffffff', 
-                        padding: '3px 8px', 
-                        borderRadius: '6px', 
-                        fontSize: '12px', 
-                        fontWeight: '700', 
-                        marginLeft: '8px',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px'
-                      }}>
-                        ⚠️ Archived
-                      </span>
-                    )}
-                    {org.isOldContract && (
-                      <span style={{ 
-                        background: '#fee2e2', 
-                        color: '#dc2626', 
-                        padding: '2px 6px', 
-                        borderRadius: '4px', 
-                        fontSize: '11px', 
-                        fontWeight: '600', 
-                        marginLeft: '8px' 
-                      }}>
-                        OLD CONTRACT
-                      </span>
-                    )}
-                    <span style={{ color: '#888', margin: '0 8px' }}>—</span>
-                    <span style={{ color: '#4a5568' }}>{org.onChainDetails ? org.onChainDetails.purpose : org.purpose}</span>
+                  <div style={{ fontSize: 14, color: '#232946' }}>
+                    <div style={{ marginBottom: '4px' }}>
+                      <span style={{ fontWeight: 600 }}>{org.onChainDetails ? org.onChainDetails.name : org.name}</span>
+                      {org.archived && (
+                        <span style={{ 
+                          background: '#dc2626', 
+                          color: '#ffffff', 
+                          padding: '3px 8px', 
+                          borderRadius: '6px', 
+                          fontSize: '12px', 
+                          fontWeight: '700', 
+                          marginLeft: '8px',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px'
+                        }}>
+                          ⚠️ Archived
+                        </span>
+                      )}
+                      {org.isOldContract && (
+                        <span style={{ 
+                          background: '#fee2e2', 
+                          color: '#dc2626', 
+                          padding: '2px 6px', 
+                          borderRadius: '4px', 
+                          fontSize: '11px', 
+                          fontWeight: '600', 
+                          marginLeft: '8px' 
+                        }}>
+                          OLD CONTRACT
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ color: '#4a5568', lineHeight: '1.4' }}>
+                      {org.onChainDetails ? org.onChainDetails.purpose : org.purpose}
+                    </div>
                   </div>
                 </div>
                 <div style={{ 
@@ -2164,7 +2236,8 @@ function App() {
                   color: '#4ecdc4', 
                   marginLeft: 8,
                   display: 'flex',
-                  alignItems: 'center'
+                  alignItems: 'flex-start',
+                  paddingTop: '2px'
                 }}>
                   <span style={{ marginRight: 4 }}>View Details</span>
                   <span>▶</span>
