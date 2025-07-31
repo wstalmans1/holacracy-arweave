@@ -1066,22 +1066,51 @@ function App() {
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       console.log('Mobile detection result:', isMobile);
       
-      // On mobile, use simplified connection approach
+      // On mobile, use enhanced connection approach
       if (isMobile) {
-        console.log('Mobile detected, using simplified connection...');
+        console.log('Mobile detected, using enhanced mobile connection...');
         
-        // Check if we're in a wallet's browser (exclude Brave Wallet)
-        const isInWalletBrowser = window.ethereum && (
-          window.ethereum.isMetaMask || 
-          window.ethereum.isTrust || 
-          window.ethereum.isCoinbaseWallet ||
-          window.ethereum.isTokenPocket ||
-          window.ethereum.isImToken
-        ) && !window.ethereum.isBraveWallet;
+        // First, try to detect if we're in a functional wallet browser
+        let isInFunctionalWalletBrowser = false;
+        let walletName = '';
         
-        if (isInWalletBrowser) {
+        if (window.ethereum) {
+          // Check for known wallet browsers
+          if (window.ethereum.isMetaMask) {
+            isInFunctionalWalletBrowser = true;
+            walletName = 'MetaMask';
+          } else if (window.ethereum.isTrust) {
+            isInFunctionalWalletBrowser = true;
+            walletName = 'Trust Wallet';
+          } else if (window.ethereum.isCoinbaseWallet) {
+            isInFunctionalWalletBrowser = true;
+            walletName = 'Coinbase Wallet';
+          } else if (window.ethereum.isTokenPocket) {
+            isInFunctionalWalletBrowser = true;
+            walletName = 'TokenPocket';
+          } else if (window.ethereum.isImToken) {
+            isInFunctionalWalletBrowser = true;
+            walletName = 'imToken';
+          } else if (window.ethereum.isBraveWallet) {
+            isInFunctionalWalletBrowser = true;
+            walletName = 'Brave Wallet';
+          }
+          
+          // Additional check: try to request accounts to see if wallet is functional
+          if (!isInFunctionalWalletBrowser && window.ethereum.request) {
+            try {
+              await window.ethereum.request({ method: 'eth_requestAccounts' });
+              isInFunctionalWalletBrowser = true;
+              walletName = 'Unknown Wallet';
+            } catch (e) {
+              console.log('Wallet request failed, likely non-functional:', e);
+            }
+          }
+        }
+        
+        if (isInFunctionalWalletBrowser) {
           try {
-            console.log('Trying wallet browser connection...');
+            console.log(`Trying ${walletName} browser connection...`);
             const prov = new ethers.BrowserProvider(window.ethereum);
             const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
             setAccount(accs[0]);
@@ -1095,7 +1124,7 @@ function App() {
             const fac = new ethers.Contract(addresses.HOLACRACY_FACTORY, getAbiArray(factoryArtifact), sign);
             setFactory(fac);
             setConnecting(false);
-            console.log('Wallet browser connection successful');
+            console.log(`${walletName} browser connection successful`);
             return;
           } catch (walletError) {
             console.error('Wallet browser error:', walletError);
@@ -1103,18 +1132,49 @@ function App() {
             setConnecting(false);
             return;
           }
-                  } else {
-            // Not in a wallet browser - show instructions
-            if (window.ethereum && window.ethereum.isBraveWallet) {
-              setError("Brave Wallet detected. Please open this DApp in MetaMask or another wallet's browser for the best experience.");
-            } else if (window.ethereum) {
-              setError("Unsupported wallet detected. Please open this DApp in MetaMask, Trust Wallet, or Coinbase Wallet browser.");
-            } else {
-              setError("No wallet detected. Please open this DApp in your wallet's built-in browser (MetaMask, Trust Wallet, etc.) for the best experience.");
+        } else {
+          // Not in a functional wallet browser - use WalletConnect
+          console.log('No functional wallet browser detected, using WalletConnect...');
+          try {
+            const provider = await EthereumProvider.init({
+              projectId: 'c4f79cc821944d9680842e34466bfbd9',
+              chains: [11155111],
+              showQrModal: true,
+              metadata: {
+                name: 'Holacracy DApp',
+                description: 'Holacracy Organization Creation & Participation DApp',
+                url: window.location.host,
+                icons: ['https://raw.githubusercontent.com/WalletConnect/walletconnect-assets/master/Logo/Blue%20(Default)/Logo.svg']
+              }
+            });
+            
+            await provider.connect();
+            setWalletConnectProvider(provider);
+            
+            const ethersProvider = new ethers.BrowserProvider(provider);
+            const accounts = await ethersProvider.listAccounts();
+            setAccount(accounts[0].address);
+            
+            const net = await ethersProvider.getNetwork();
+            if (net.chainId.toString() !== SEPOLIA_CHAIN_ID) {
+              setError("Please switch to the Sepolia network in your wallet.");
+              setConnecting(false);
+              return;
             }
+            
+            const sign = await ethersProvider.getSigner();
+            const fac = new ethers.Contract(addresses.HOLACRACY_FACTORY, getAbiArray(factoryArtifact), sign);
+            setFactory(fac);
+            setConnecting(false);
+            console.log('WalletConnect connection successful');
+            return;
+          } catch (wcError) {
+            console.error('WalletConnect error:', wcError);
+            setError("Failed to connect with WalletConnect. Please try opening this DApp in your wallet's browser (MetaMask, Trust Wallet, etc.) for the best experience.");
             setConnecting(false);
             return;
           }
+        }
       } else {
         // On desktop, try MetaMask first
         if (window.ethereum) {
