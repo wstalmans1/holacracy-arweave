@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ethers } from 'ethers';
-import { EthereumProvider } from '@walletconnect/ethereum-provider';
 
 import factoryArtifact from "./abis/HolacracyFactory-optimized.json";
 import orgArtifact from "./abis/Organization-optimized.json";
@@ -31,7 +30,7 @@ const styles = {
   header: {
     background: '#232946',
     color: '#fff',
-    padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '32px 16px 18px 16px' : '32px 0 18px 0',
+    padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '24px 16px 18px 16px' : '32px 0 18px 0',
     textAlign: 'center',
     fontWeight: 700,
     fontSize: 32,
@@ -51,7 +50,7 @@ const styles = {
   },
   section: {
     maxWidth: 800,
-    margin: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '8px 12px 32px 12px' : '16px auto 32px auto',
+    margin: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '4px 12px 32px 12px' : '16px auto 32px auto',
     background: '#fff',
     borderRadius: 12,
     boxShadow: '0 2px 12px rgba(44,62,80,0.07)',
@@ -939,8 +938,6 @@ function App() {
   const [createOrgModalOpen, setCreateOrgModalOpen] = useState(false);
   const [createOrgModalSuccess, setCreateOrgModalSuccess] = useState("");
   const [infoModalOpen, setInfoModalOpen] = useState(false);
-  // eslint-disable-next-line no-unused-vars
-  const [walletConnectProvider, setWalletConnectProvider] = useState(null);
   const nameInputRef = React.useRef();
   const purposeInputRef = React.useRef();
   const createOrgNameInputRef = React.useRef();
@@ -1061,179 +1058,38 @@ function App() {
     setError("");
     setConnecting(true);
     console.log('Connect wallet function called');
+    
     try {
-      // Check if we're on mobile
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      console.log('Mobile detection result:', isMobile);
-      
-      // On mobile, use enhanced connection approach
-      if (isMobile) {
-        console.log('Mobile detected, using enhanced mobile connection...');
+      if (window.ethereum) {
+        console.log('MetaMask detected, requesting connection...');
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        setAccount(accounts[0]);
         
-        // First, try to detect if we're in a functional wallet browser
-        let isInFunctionalWalletBrowser = false;
-        let walletName = '';
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const network = await provider.getNetwork();
         
-        if (window.ethereum) {
-          // Check for known wallet browsers
-          if (window.ethereum.isMetaMask) {
-            isInFunctionalWalletBrowser = true;
-            walletName = 'MetaMask';
-          } else if (window.ethereum.isTrust) {
-            isInFunctionalWalletBrowser = true;
-            walletName = 'Trust Wallet';
-          } else if (window.ethereum.isCoinbaseWallet) {
-            isInFunctionalWalletBrowser = true;
-            walletName = 'Coinbase Wallet';
-          } else if (window.ethereum.isTokenPocket) {
-            isInFunctionalWalletBrowser = true;
-            walletName = 'TokenPocket';
-          } else if (window.ethereum.isImToken) {
-            isInFunctionalWalletBrowser = true;
-            walletName = 'imToken';
-          } else if (window.ethereum.isBraveWallet) {
-            isInFunctionalWalletBrowser = true;
-            walletName = 'Brave Wallet';
-          }
-          
-          // Additional check: try to request accounts to see if wallet is functional
-          if (!isInFunctionalWalletBrowser && window.ethereum.request) {
-            try {
-              await window.ethereum.request({ method: 'eth_requestAccounts' });
-              isInFunctionalWalletBrowser = true;
-              walletName = 'Unknown Wallet';
-            } catch (e) {
-              console.log('Wallet request failed, likely non-functional:', e);
-            }
-          }
-        }
-        
-        if (isInFunctionalWalletBrowser) {
-          try {
-            console.log(`Trying ${walletName} browser connection...`);
-            const prov = new ethers.BrowserProvider(window.ethereum);
-            const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
-            setAccount(accs[0]);
-            const net = await prov.getNetwork();
-            if (net.chainId.toString() !== SEPOLIA_CHAIN_ID) {
-              setError("Please switch to the Sepolia network in your wallet.");
-              setConnecting(false);
-              return;
-            }
-            const sign = await prov.getSigner();
-            const fac = new ethers.Contract(addresses.HOLACRACY_FACTORY, getAbiArray(factoryArtifact), sign);
-            setFactory(fac);
-            setConnecting(false);
-            console.log(`${walletName} browser connection successful`);
-            return;
-          } catch (walletError) {
-            console.error('Wallet browser error:', walletError);
-            setError("Wallet connection failed. Please try again or switch to Sepolia network.");
-            setConnecting(false);
-            return;
-          }
-        } else {
-          // Not in a functional wallet browser - use WalletConnect
-          console.log('No functional wallet browser detected, using WalletConnect...');
-          try {
-            const provider = await EthereumProvider.init({
-              projectId: 'c4f79cc821944d9680842e34466bfbd9',
-              chains: [11155111],
-              showQrModal: true,
-              metadata: {
-                name: 'Holacracy DApp',
-                description: 'Holacracy Organization Creation & Participation DApp',
-                url: window.location.host,
-                icons: ['https://raw.githubusercontent.com/WalletConnect/walletconnect-assets/master/Logo/Blue%20(Default)/Logo.svg']
-              }
-            });
-            
-            await provider.connect();
-            setWalletConnectProvider(provider);
-            
-            const ethersProvider = new ethers.BrowserProvider(provider);
-            const accounts = await ethersProvider.listAccounts();
-            setAccount(accounts[0].address);
-            
-            const net = await ethersProvider.getNetwork();
-            if (net.chainId.toString() !== SEPOLIA_CHAIN_ID) {
-              setError("Please switch to the Sepolia network in your wallet.");
-              setConnecting(false);
-              return;
-            }
-            
-            const sign = await ethersProvider.getSigner();
-            const fac = new ethers.Contract(addresses.HOLACRACY_FACTORY, getAbiArray(factoryArtifact), sign);
-            setFactory(fac);
-            setConnecting(false);
-            console.log('WalletConnect connection successful');
-            return;
-          } catch (wcError) {
-            console.error('WalletConnect error:', wcError);
-            setError("Failed to connect with WalletConnect. Please try opening this DApp in your wallet's browser (MetaMask, Trust Wallet, etc.) for the best experience.");
-            setConnecting(false);
-            return;
-          }
-        }
-      } else {
-        // On desktop, try MetaMask first
-        if (window.ethereum) {
-          const prov = new ethers.BrowserProvider(window.ethereum);
-          const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
-          setAccount(accs[0]);
-          const net = await prov.getNetwork();
-          if (net.chainId.toString() !== SEPOLIA_CHAIN_ID) {
-            setError("Please switch to the Sepolia network in your wallet.");
-            setConnecting(false);
-            return;
-          }
-          const sign = await prov.getSigner();
-          const fac = new ethers.Contract(addresses.HOLACRACY_FACTORY, getAbiArray(factoryArtifact), sign);
-          setFactory(fac);
+        if (network.chainId.toString() !== SEPOLIA_CHAIN_ID) {
+          setError("Please switch to the Sepolia network in your wallet.");
           setConnecting(false);
-        } else {
-          // Desktop fallback to WalletConnect
-          try {
-            const provider = await EthereumProvider.init({
-              projectId: 'c4f79cc821944d9680842e34466bfbd9',
-              chains: [11155111],
-              showQrModal: true,
-              metadata: {
-                name: 'Holacracy DApp',
-                description: 'Holacracy Organization Creation & Participation DApp',
-                url: window.location.host,
-                icons: ['https://raw.githubusercontent.com/WalletConnect/walletconnect-assets/master/Logo/Blue%20(Default)/Logo.svg']
-              }
-            });
-            
-            await provider.connect();
-            setWalletConnectProvider(provider);
-            
-            const ethersProvider = new ethers.BrowserProvider(provider);
-            const accounts = await ethersProvider.listAccounts();
-            setAccount(accounts[0].address);
-            
-            const net = await ethersProvider.getNetwork();
-            if (net.chainId.toString() !== SEPOLIA_CHAIN_ID) {
-              setError("Please switch to the Sepolia network in your wallet.");
-              setConnecting(false);
-              return;
-            }
-            
-            const sign = await ethersProvider.getSigner();
-            const fac = new ethers.Contract(addresses.HOLACRACY_FACTORY, getAbiArray(factoryArtifact), sign);
-            setFactory(fac);
-            setConnecting(false);
-          } catch (wcError) {
-            console.error('WalletConnect error:', wcError);
-            setError("Failed to connect with WalletConnect. Please try again or use MetaMask.");
-            setConnecting(false);
-          }
+          return;
         }
+        
+        const signer = await provider.getSigner();
+        const fac = new ethers.Contract(addresses.HOLACRACY_FACTORY, getAbiArray(factoryArtifact), signer);
+        setFactory(fac);
+        
+        console.log('MetaMask connection successful');
+      } else {
+        setError("MetaMask not detected. Please install MetaMask and try again.");
       }
     } catch (e) {
-      console.error('Wallet connection error:', e);
-      setError("Failed to connect wallet: " + (e?.message || e));
+      console.error('Connection error:', e);
+      if (e.code === 4001) {
+        setError("Connection rejected by user.");
+      } else {
+        setError("Failed to connect wallet: " + (e?.message || e));
+      }
+    } finally {
       setConnecting(false);
     }
   };
@@ -2200,11 +2056,11 @@ function App() {
           }}>
             <span style={{ 
               color: '#232946', 
-              fontSize: 22, 
+              fontSize: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 18 : 22, 
               fontWeight: 700, 
               display: 'flex', 
               alignItems: 'center', 
-              height: 22,
+              height: 28,
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis'
