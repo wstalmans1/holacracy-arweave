@@ -951,8 +951,24 @@ function App() {
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   const hasMetaMask = typeof window.ethereum !== 'undefined';
   
-  // Check if we're already in MetaMask browser
+  // Check if we're already in MetaMask browser (not Brave)
   const isInMetaMaskBrowser = window.ethereum && window.ethereum.isMetaMask && isMobile;
+  
+  // Check if we're in Brave browser
+  const isBraveBrowser = navigator.brave && navigator.brave.isBrave();
+  
+  // Debug logging
+  console.log('Mobile detection:', {
+    isMobile,
+    hasMetaMask,
+    isInMetaMaskBrowser,
+    isBraveBrowser,
+    ethereum: window.ethereum ? {
+      isMetaMask: window.ethereum.isMetaMask,
+      isBrave: window.ethereum.isBrave,
+      isCoinbaseWallet: window.ethereum.isCoinbaseWallet
+    } : null
+  });
 
   useEffect(() => {
     async function fetchEnsAndBalanceAndNetwork() {
@@ -2017,7 +2033,7 @@ function App() {
                     {isMobile ? (
                       <div>
                         <strong>📱 Mobile User</strong><br />
-                        This DApp requires MetaMask mobile browser to connect your wallet.
+                        To use this DApp, open its URL in the browser of MetaMask.
                       </div>
                     ) : (
                       <div>
@@ -2041,7 +2057,7 @@ function App() {
                     lineHeight: '1.4'
                   }}>
                     <strong>📱 Mobile Browser</strong><br />
-                    This DApp requires MetaMask mobile browser to connect your wallet.
+                    To use this DApp, open its URL in the browser of MetaMask.
                   </div>
                 )}
               </div>
