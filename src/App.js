@@ -2037,8 +2037,7 @@ function App() {
                       </div>
                     ) : (
                       <div>
-                        <strong>🦊 MetaMask Required</strong><br />
-                        This DApp requires MetaMask browser extension. Please install it from <a href="https://metamask.io" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>metamask.io</a>
+                        <strong>🦊 This DApp requires MetaMask browser extension. Please install it from <a href="https://metamask.io" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>metamask.io</a></strong>
                       </div>
                     )}
                   </div>
