@@ -957,18 +957,16 @@ function App() {
   // Check if we're in Brave browser
   const isBraveBrowser = navigator.brave && navigator.brave.isBrave();
   
-  // Debug logging
-  console.log('Mobile detection:', {
-    isMobile,
-    hasMetaMask,
-    isInMetaMaskBrowser,
-    isBraveBrowser,
-    ethereum: window.ethereum ? {
-      isMetaMask: window.ethereum.isMetaMask,
-      isBrave: window.ethereum.isBrave,
-      isCoinbaseWallet: window.ethereum.isCoinbaseWallet
-    } : null
-  });
+  // Temporary debug for mobile Brave
+  if (isMobile && hasMetaMask) {
+    console.log('Mobile with MetaMask detected:', {
+      isMobile,
+      hasMetaMask,
+      isInMetaMaskBrowser,
+      isBraveBrowser,
+      ethereumIsMetaMask: window.ethereum?.isMetaMask
+    });
+  }
 
   useEffect(() => {
     async function fetchEnsAndBalanceAndNetwork() {
