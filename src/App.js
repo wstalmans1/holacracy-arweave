@@ -114,6 +114,11 @@ const styles = {
     color: '#888',
     fontSize: 12,
     margin: '48px 0 12px 0',
+    padding: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? '0 24px' : '0',
+    lineHeight: 1.5,
+    maxWidth: 800,
+    marginLeft: 'auto',
+    marginRight: 'auto',
   },
   orgInfo: {
     display: 'flex',
