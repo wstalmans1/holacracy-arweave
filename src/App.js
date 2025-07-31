@@ -951,6 +951,13 @@ function App() {
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   const hasMetaMask = typeof window.ethereum !== 'undefined';
 
+  // Function to open MetaMask mobile browser
+  const openInMetaMaskBrowser = () => {
+    const currentUrl = window.location.href;
+    const metamaskUrl = `https://metamask.app.link/dapp/${encodeURIComponent(currentUrl)}`;
+    window.open(metamaskUrl, '_blank');
+  };
+
   useEffect(() => {
     async function fetchEnsAndBalanceAndNetwork() {
       if (account && window.ethereum) {
@@ -2015,6 +2022,22 @@ function App() {
                       <div>
                         <strong>📱 Mobile User</strong><br />
                         Please open this website in your MetaMask mobile browser for the best experience.
+                        <br />
+                        <button 
+                          onClick={openInMetaMaskBrowser}
+                          style={{ 
+                            background: 'none', 
+                            border: 'none', 
+                            color: '#4ecdc4', 
+                            textDecoration: 'underline', 
+                            cursor: 'pointer', 
+                            fontSize: '14px',
+                            marginTop: '4px',
+                            fontWeight: '600'
+                          }}
+                        >
+                          Click here to open in MetaMask
+                        </button>
                       </div>
                     ) : (
                       <div>
@@ -2039,6 +2062,22 @@ function App() {
                   }}>
                     <strong>📱 Mobile Browser</strong><br />
                     For the best experience, open this website in your MetaMask mobile browser.
+                    <br />
+                    <button 
+                      onClick={openInMetaMaskBrowser}
+                      style={{ 
+                        background: 'none', 
+                        border: 'none', 
+                        color: '#4ecdc4', 
+                        textDecoration: 'underline', 
+                        cursor: 'pointer', 
+                        fontSize: '14px',
+                        marginTop: '4px',
+                        fontWeight: '600'
+                      }}
+                    >
+                      Click here to open in MetaMask
+                    </button>
                   </div>
                 )}
               </div>
