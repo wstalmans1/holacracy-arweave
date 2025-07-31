@@ -947,6 +947,10 @@ function App() {
   const purposeInputRef = React.useRef();
   const createOrgNameInputRef = React.useRef();
 
+  // Device detection
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const hasMetaMask = typeof window.ethereum !== 'undefined';
+
   useEffect(() => {
     async function fetchEnsAndBalanceAndNetwork() {
       if (account && window.ethereum) {
@@ -1993,6 +1997,50 @@ function App() {
                 >
                   Connect Wallet
                 </button>
+                {/* Device-specific overlay messages */}
+                {!hasMetaMask && (
+                  <div style={{
+                    background: '#fff3cd',
+                    border: '1px solid #ffeaa7',
+                    borderRadius: '8px',
+                    padding: '12px 16px',
+                    marginTop: '8px',
+                    maxWidth: '300px',
+                    textAlign: 'center',
+                    fontSize: '14px',
+                    color: '#856404',
+                    lineHeight: '1.4'
+                  }}>
+                    {isMobile ? (
+                      <div>
+                        <strong>📱 Mobile User</strong><br />
+                        Please open this website in your MetaMask mobile browser for the best experience.
+                      </div>
+                    ) : (
+                      <div>
+                        <strong>🦊 MetaMask Required</strong><br />
+                        This DApp requires MetaMask browser extension. Please install it from <a href="https://metamask.io" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>metamask.io</a>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {hasMetaMask && isMobile && (
+                  <div style={{
+                    background: '#d1ecf1',
+                    border: '1px solid #bee5eb',
+                    borderRadius: '8px',
+                    padding: '12px 16px',
+                    marginTop: '8px',
+                    maxWidth: '300px',
+                    textAlign: 'center',
+                    fontSize: '14px',
+                    color: '#0c5460',
+                    lineHeight: '1.4'
+                  }}>
+                    <strong>📱 Mobile Browser</strong><br />
+                    For the best experience, open this website in your MetaMask mobile browser.
+                  </div>
+                )}
               </div>
             )}
           </div>
