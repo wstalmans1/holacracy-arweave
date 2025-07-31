@@ -955,7 +955,7 @@ function App() {
   const isInMetaMaskBrowser = window.ethereum && window.ethereum.isMetaMask && isMobile;
   
   // Check if we're in Brave browser
-  const isBraveBrowser = navigator.brave && navigator.brave.isBrave();
+  const isBraveBrowser = navigator.brave && typeof navigator.brave.isBrave === 'function' ? navigator.brave.isBrave() : false;
   
   // Temporary debug for mobile Brave
   if (isMobile && hasMetaMask) {
@@ -964,7 +964,8 @@ function App() {
       hasMetaMask,
       isInMetaMaskBrowser,
       isBraveBrowser,
-      ethereumIsMetaMask: window.ethereum?.isMetaMask
+      ethereumIsMetaMask: window.ethereum?.isMetaMask,
+      userAgent: navigator.userAgent
     });
   }
 
@@ -2040,7 +2041,7 @@ function App() {
                     )}
                   </div>
                 )}
-                {hasMetaMask && isMobile && !isInMetaMaskBrowser && (
+                {hasMetaMask && isMobile && (!isInMetaMaskBrowser || isBraveBrowser) && (
                   <div style={{
                     background: '#d1ecf1',
                     border: '1px solid #bee5eb',
